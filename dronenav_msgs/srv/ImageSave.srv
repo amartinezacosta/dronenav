@@ -1,0 +1,4 @@
+uint32 count
+string name
+---
+bool success

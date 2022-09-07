@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dronenav_msgs</name>
+  <version>0.0.0</version>
+  <description>dronenav_msgs for the drone navigation stack</description>
+
+  <maintainer email="amartinezacosta@miners.utep.edu">amartinezacosta</maintainer>
+
+  <license>BSD</license>
+
+  <author email="amartinezacosta@miners.utep.edu">Alejandro Martinez Acosta</author> -->
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend> message_runtime </exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

@@ -1,0 +1,2 @@
+uint32 queue_size
+bool path_found
