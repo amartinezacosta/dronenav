@@ -33,7 +33,7 @@ namespace dronenav
     //Publishers
     m_target_pose_pub = m_nh.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);
     //_target_pose_pub = _nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
-    m_drone_status_pub = m_nh.advertise<dronenav_msgs::Status>("dronenav/status", 10);
+    m_drone_status_pub = m_nh.advertise<dronenav_msgs::Status>("dronenav/status", 30);
     m_waypoint_reached = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint_reached", 50);
 
     //Service clients
@@ -48,6 +48,9 @@ namespace dronenav
     m_takeoff_server = m_nh.advertiseService("dronenav/takeoff", &Drone::takeoff_service, this);
     m_land_server = m_nh.advertiseService("dronenav/land", &Drone::land_service, this);
 
+    //Timers
+    m_status_timer = m_nh.createTimer(ros::Duration(0.1), &Drone::status_timer_callback, this);
+
     //Initialize pose stream thread
     m_stream_run = true;
     m_pose_thread = boost::thread(boost::bind(&Drone::pose_stream, this));
@@ -55,9 +58,9 @@ namespace dronenav
 
   Drone::~Drone(void)
   {
-      /*Close pose stream thread here!*/
-      m_stream_run = false;
-      m_pose_thread.join();
+    /*Close pose stream thread here!*/
+    m_stream_run = false;
+    m_pose_thread.join();
   }
 
   void Drone::connect(void)
@@ -95,228 +98,230 @@ namespace dronenav
 
   void Drone::arm(void)
   {
-      int tries = m_arm_tries;
-      bool armed = false;
+    int tries = m_arm_tries;
+    bool armed = false;
 
-      mavros_msgs::CommandBool msg;
-      msg.request.value = true;
+    mavros_msgs::CommandBool msg;
+    msg.request.value = true;
 
-      m_arm_client.call(msg);
-      ros::spinOnce();
-      ros::Duration(0.1).sleep();
+    m_arm_client.call(msg);
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
 
-      ROS_INFO_NAMED("dronenav", "Arming vehicle");
-      while(tries)
-      {
-          if(m_mavros_state.armed)
-          {
-              ROS_INFO_NAMED("dronenav", "Vehicle armed");
-              armed = true;
-              break;
-          }
-          else
-          {
-              tries--;
-              m_arm_client.call(msg);
-              ros::spinOnce();
-              ros::Duration(1.0).sleep();
-          }
-      }
+    ROS_INFO_NAMED("dronenav", "Arming vehicle");
+    while(tries)
+    {
+        if(m_mavros_state.armed)
+        {
+            ROS_INFO_NAMED("dronenav", "Vehicle armed");
+            armed = true;
+            break;
+        }
+        else
+        {
+            tries--;
+            m_arm_client.call(msg);
+            ros::spinOnce();
+            ros::Duration(1.0).sleep();
+        }
+    }
 
-      if(!armed) 
-      {
-          ROS_ERROR_NAMED("dronenav", "Failed to arm vehicle");
-          //TODO: transition to exception state
-      }
+    if(!armed) 
+    {
+        ROS_ERROR_NAMED("dronenav", "Failed to arm vehicle");
+        //TODO: transition to exception state
+    }
   }
   void Drone::offboard(void)
   {
-      int tries = m_arm_tries;
-      bool enabled = false;
+    int tries = m_arm_tries;
+    bool enabled = false;
 
-      mavros_msgs::SetMode msg;
-      msg.request.custom_mode = "OFFBOARD";
+    mavros_msgs::SetMode msg;
+    msg.request.custom_mode = "OFFBOARD";
 
-      m_mode_client.call(msg);
-      ros::spinOnce();
-      ros::Duration(0.1).sleep();
+    m_mode_client.call(msg);
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
 
-      ROS_INFO_NAMED("dronenav", "Switching to offboard control");
-      while(tries)
-      {
-          if(m_mavros_state.mode == "OFFBOARD")
-          {
-              enabled = true;
-              ROS_DEBUG_NAMED("dronenav", "Offboard control enabled");
-              break;
-          }
-          else
-          {
-              tries--;
-              m_mode_client.call(msg);
-              ros::spinOnce();
-              ros::Duration(1.0).sleep();
-          }
-      }
+    ROS_INFO_NAMED("dronenav", "Switching to offboard control");
+    while(tries)
+    {
+        if(m_mavros_state.mode == "OFFBOARD")
+        {
+            enabled = true;
+            ROS_DEBUG_NAMED("dronenav", "Offboard control enabled");
+            break;
+        }
+        else
+        {
+            tries--;
+            m_mode_client.call(msg);
+            ros::spinOnce();
+            ros::Duration(1.0).sleep();
+        }
+    }
 
-      if(!enabled) 
-      {
-          ROS_ERROR_NAMED("dronenav", "Failed to switch to offboard mode");
-          //TODO: transition to exception state
-      }
+    if(!enabled) 
+    {
+        ROS_ERROR_NAMED("dronenav", "Failed to switch to offboard mode");
+        //TODO: transition to exception state
+    }
   }
 
   bool Drone::set_cruise_speed(double cruise_speed)
   {
-      int tries = m_set_cruise_speed_tries;
-      bool set = false;
+    int tries = m_set_cruise_speed_tries;
+    bool set = false;
 
-      mavros_msgs::ParamSet srv;
-      srv.request.param_id = "MPC_XY_VEL_MAX";
-      srv.request.value.real = cruise_speed;
-      srv.request.value.integer = 0;
+    mavros_msgs::ParamSet srv;
+    srv.request.param_id = "MPC_XY_VEL_MAX";
+    srv.request.value.real = cruise_speed;
+    srv.request.value.integer = 0;
 
-      m_param_set_client.call(srv);
-      ros::spinOnce();
-      ros::Duration(0.1).sleep();
+    m_param_set_client.call(srv);
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
 
-      ROS_INFO_NAMED("dronenav", "Changing cruise speed to %f m/s", cruise_speed);
-      while(tries)
-      {
-          if(srv.response.success)
-          {
-              set = true;
-              ROS_INFO_NAMED("dronenav", "Cruise speed set");
-              break;
-          }
-          else
-          {
-              tries--;
-              m_param_set_client.call(srv);
-              ros::spinOnce();
-              ros::Duration(1.0).sleep();
-          }
-      }
+    ROS_INFO_NAMED("dronenav", "Changing cruise speed to %f m/s", cruise_speed);
+    while(tries)
+    {
+        if(srv.response.success)
+        {
+            set = true;
+            ROS_INFO_NAMED("dronenav", "Cruise speed set");
+            break;
+        }
+        else
+        {
+            tries--;
+            m_param_set_client.call(srv);
+            ros::spinOnce();
+            ros::Duration(1.0).sleep();
+        }
+    }
 
-      if(!set) 
-      {
-          ROS_ERROR_NAMED("dronenav", "Could not set cruise speed! Response %f", 
-              srv.response.value.real);
-          //TODO: transition to exception state
-      }
+    if(!set) 
+    {
+        ROS_ERROR_NAMED("dronenav", "Could not set cruise speed! Response %f", 
+            srv.response.value.real);
+        //TODO: transition to exception state
+    }
 
-      return set;
+    return set;
+  }
+
+  void Drone::status_timer_callback(const ros::TimerEvent& evt)
+  {
+    m_dronenav_status.current_position = get_current_position();
+    m_dronenav_status.target_position = get_target_position();
+    m_dronenav_status.current_yaw = get_current_yaw();
+    m_dronenav_status.target_yaw = get_target_yaw();
+    m_dronenav_status.waypoint_queue_size = m_waypoint_queue.size();
+
+    m_drone_status_pub.publish(m_dronenav_status);
   }
 
   void Drone::state_callback(const mavros_msgs::State::ConstPtr& msg)
   {
-      m_mavros_state = *msg;
+    m_mavros_state = *msg;
 
-      //TODO: states can be used to cause transitions. Find
-      //out what states could be useful
+    //TODO: states can be used to cause transitions. Find
+    //out what states could be useful
   }
 
   void Drone::waypoint_callback(const dronenav_msgs::Waypoint::ConstPtr& msg)
   {
-      if((*msg).flags & dronenav_msgs::Waypoint::FLUSH_QUEUE)
-      {
-          flush();
-      }
-      
-      //Enqueue new waypoint
-      enqueue(*msg);
-      //Process the waypoint received event
-      process_event(EvWaypointReceived());
+    if((*msg).flags & dronenav_msgs::Waypoint::FLUSH_QUEUE)
+    {
+        flush();
+    }
+    
+    //Enqueue new waypoint
+    enqueue(*msg);
+    //Process the waypoint received event
+    process_event(EvWaypointReceived());
   }
 
   void Drone::land(void)
   {
-      mavros_msgs::SetMode msg;
-      msg.request.custom_mode = "AUTO.LAND";
+    mavros_msgs::SetMode msg;
+    msg.request.custom_mode = "AUTO.LAND";
 
-      m_mode_client.call(msg);
-      ros::spinOnce();
+    m_mode_client.call(msg);
+    ros::spinOnce();
   }
 
   void Drone::save_image(void)
   {
-      std_srvs::Empty srv;
-      m_image_save_client.call(srv);
+    std_srvs::Empty srv;
+    m_image_save_client.call(srv);
   }
 
   void Drone::save_pointcloud(void)
   {
-      // dronenav_msgs::PointCloudSave srv;
-      // m_pointcloud_save_client.call(srv);
+    // dronenav_msgs::PointCloudSave srv;
+    // m_pointcloud_save_client.call(srv);
   }
 
   void Drone::enqueue(dronenav_msgs::Waypoint waypoint)
   {
-      m_waypoint_queue.push(waypoint);
+    m_waypoint_queue.push(waypoint);
   }
 
   bool Drone::next(void)
   {
-      bool result = false;
-      if(!m_waypoint_queue.empty())
-      {
-          m_waypoint = m_waypoint_queue.front();
-          result = true;
-      }
+    bool result = false;
+    if(!m_waypoint_queue.empty())
+    {
+        m_waypoint = m_waypoint_queue.front();
+        result = true;
+    }
 
-      return result;
+    return result;
   }
 
   bool Drone::dequeue(void)
   {
-      bool result = false;
-      if(!m_waypoint_queue.empty())
-      {
-          m_waypoint_queue.pop();
-          result = true;
-      }
+    bool result = false;
+    if(!m_waypoint_queue.empty())
+    {
+        m_waypoint_queue.pop();
+        result = true;
+    }
 
-      return result;
+    return result;
   }
 
   void Drone::pose_stream(void)
   {
-      ROS_INFO_NAMED("dronenav", "Pose stream thread initialized");
-      ros::Rate rate(20.0);
+    ROS_INFO_NAMED("dronenav", "Pose stream thread initialized");
+    ros::Rate rate(20.0);
 
-      int sequence = 0;
+    int sequence = 0;
 
-      while(m_stream_run)
-      {
-          //Publish drone pose
-          mavros_msgs::PositionTarget msg;
-          msg.type_mask = mavros_msgs::PositionTarget::IGNORE_AFX |
-                          mavros_msgs::PositionTarget::IGNORE_AFY |
-                          mavros_msgs::PositionTarget::IGNORE_AFZ |
-                          mavros_msgs::PositionTarget::IGNORE_VX  |
-                          mavros_msgs::PositionTarget::IGNORE_VY  |
-                          mavros_msgs::PositionTarget::IGNORE_VZ  |
-                          mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
+    while(m_stream_run)
+    {
+        //Publish drone pose
+        mavros_msgs::PositionTarget msg;
+        msg.type_mask = mavros_msgs::PositionTarget::IGNORE_AFX |
+                        mavros_msgs::PositionTarget::IGNORE_AFY |
+                        mavros_msgs::PositionTarget::IGNORE_AFZ |
+                        mavros_msgs::PositionTarget::IGNORE_VX  |
+                        mavros_msgs::PositionTarget::IGNORE_VY  |
+                        mavros_msgs::PositionTarget::IGNORE_VZ  |
+                        mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
 
-          msg.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-          msg.header.stamp = ros::Time::now();
-          msg.header.frame_id = "body_link";
-          msg.header.seq = sequence++;
-          msg.position = m_target_position;
-          msg.yaw = m_target_yaw;
+        msg.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+        msg.header.stamp = ros::Time::now();
+        msg.header.frame_id = "body_link";
+        msg.header.seq = sequence++;
+        msg.position = m_target_position;
+        msg.yaw = m_target_yaw;
 
-          m_target_pose_pub.publish(msg);
-
-          //TODO: maybe use a dedicated ROS timer?
-          //Publish drone status
-          dronenav_msgs::Status status;
-          status.queue_size = m_waypoint_queue.size();
-          status.state = m_mavros_state;
-
-          m_drone_status_pub.publish(status);
-
-          rate.sleep();
-      }
+        m_target_pose_pub.publish(msg);
+        rate.sleep();
+    }
   }
 
   bool Drone::takeoff_service(dronenav_msgs::Takeoff::Request& rqt, 

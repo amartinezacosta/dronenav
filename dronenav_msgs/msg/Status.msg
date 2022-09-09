@@ -1,3 +1,8 @@
 #Message status for skipper drone
-mavros_msgs/State state
-uint32 queue_size
+string state
+uint32 waypoint_queue_size
+Waypoint current_waypoint
+geometry_msgs/Point current_position
+geometry_msgs/Point target_position
+float64 current_yaw
+float64 target_yaw

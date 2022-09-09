@@ -14,7 +14,9 @@ namespace dronenav
       ~Landed();
 
       boost::statechart::result react(const EvTakeoff &);
-      typedef boost::statechart::custom_reaction<EvTakeoff> reactions;
+      typedef boost::statechart::custom_reaction<EvTakeoff>reactions;
+      
+      //typedef boost::statechart::custom_reaction<EvTakeoff> reactions;
   };
 }
 

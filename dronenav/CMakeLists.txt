@@ -142,12 +142,12 @@ add_library(${PROJECT_NAME}
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
   src/main.cpp
-  src/dronenav.cpp
-  src/hovering.cpp
-  src/landed.cpp
-  src/moving.cpp
-  src/reached.cpp
-  src/yawing.cpp
+  # src/dronenav.cpp
+  # src/hovering.cpp
+  # src/landed.cpp
+  # src/moving.cpp
+  # src/reached.cpp
+  # src/yawing.cpp
   )
 
 ## Rename C++ executable without prefix
@@ -164,6 +164,7 @@ add_executable(${PROJECT_NAME}_node
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${PROJECT_NAME}
 )
 
 #############
@@ -215,7 +216,7 @@ target_link_libraries(${PROJECT_NAME}_node
 ## Add gtest based cpp test target and link libraries
 if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(takeoff_land_test
-    test/dronenav.test
+    test/takeoff_land.test
     test/takeoff_land_test.cpp)
   target_link_libraries(takeoff_land_test 
     ${catkin_LIBRARIES} 

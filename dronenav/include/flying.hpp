@@ -4,6 +4,8 @@
 #include <navigation.hpp>
 #include <landed.hpp>
 
+#include <boost/statechart/state.hpp>
+
 namespace dronenav
 {
   struct EvLand : boost::statechart::event<EvLand> {};

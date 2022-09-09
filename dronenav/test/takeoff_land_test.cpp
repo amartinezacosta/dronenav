@@ -11,9 +11,40 @@
 
 TEST(dronenav_tests, takeoff_land)
 {
-  ros::Duration(30.0).sleep();
+  ros::NodeHandle nh;
+  ros::NodeHandle pvt_nh;
 
-  ASSERT_TRUE(true);
+  dronenav::Drone drone(nh, pvt_nh);
+  drone.initiate();
+
+  ros::ServiceClient takeoff_client = nh.serviceClient<dronenav_msgs::Takeoff>("dronenav/takeoff");
+  ros::ServiceClient land_client = nh.serviceClient<dronenav_msgs::Land>("dronenav/land");
+
+  /*Takeoff request*/
+  dronenav_msgs::Takeoff takeoff_srv;
+  takeoff_srv.request.x = 0.0;
+  takeoff_srv.request.y = 0.0;
+  takeoff_srv.request.z = 3.0;
+  takeoff_srv.request.yaw = 0.0;
+
+  takeoff_client.call(takeoff_srv);
+  ros::spinOnce();
+
+  ASSERT_TRUE(takeoff_srv.response.success);
+
+  /*Wait until we have take off and in position*/
+  ros::Duration(10.0).sleep();
+
+  /*Land request*/
+  dronenav_msgs::Land land_srv;
+  land_srv.request.override_takeoff_pose = false;
+
+  land_client.call(land_srv);
+  ros::spinOnce();
+
+  ASSERT_TRUE(land_srv.response.success);
+
+  ros::Duration(10.0).sleep();
 }
 
 int main(int argc, char** argv)
@@ -21,12 +52,6 @@ int main(int argc, char** argv)
   testing::InitGoogleTest(&argc, argv);
   ros::init(argc, argv, "takeoff_landing_test");
   
-  ros::NodeHandle nh;
-  ros::NodeHandle pvt_nh;
-
-  dronenav::Drone drone(nh, pvt_nh);
-  drone.initiate();
-
   ros::AsyncSpinner spinner(1);
   spinner.start();
 

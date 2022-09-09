@@ -78,7 +78,6 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   geometry_msgs
-  mavros_msgs
   std_msgs
 )
 
