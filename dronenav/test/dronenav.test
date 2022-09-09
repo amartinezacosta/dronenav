@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!-- Launch file to test the dronenav node using PX4 SITL and Gazebo -->
 <launch>
   <!-- Simulation arguments-->
   <arg name="x" default="0.0" />
@@ -22,19 +21,7 @@
   <arg name="respawn_mavros" default="false" />
   <arg name="interactive" default="true" />
 
-  <!-- dronenav node -->
-  <node pkg="dronenav" type="dronenav_node" name="dronenav" output="screen">
-    <param name="connect_tries" type="int" value="10"/>
-    <param name="arm_tries" type="int" value="10"/>
-    <param name="offboard_mode_tries" type="int" value="10"/>
-    <param name="reach_radius_sqr" value="0.1"/>
-    <param name="yaw_min_error" value="0.1"/>
-    <param name="waypoint_timeout" value="30.0"/>
-    <param name="moving_tick_resolution" value="0.01"/>
-    <param name="cruise_speed" value="1.0"/>
-  </node>
-
-  <!-- PX4 SITL and Gazebo Simulation-->
+    <!-- PX4 SITL and Gazebo Simulation-->
   <include file="$(find px4)/launch/posix_sitl.launch">
       <arg name="x" value="$(arg x)" />
       <arg name="y" value="$(arg y)" />
@@ -60,8 +47,15 @@
       <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
   </include>
 
-  <!-- rviz node -->
-  <node pkg="rviz" type="rviz" name="rviz"/>
-  <!-- rqt_console node-->
-  <node pkg="rqt_console" type="rqt_console" name="rqt_console"/>
+  <test test-name="takeoff_land_test" pkg="dronenav" type="takeoff_land_test"
+    required="true" time-limit="90.0">
+    <param name="connect_tries" type="int" value="10"/>
+    <param name="arm_tries" type="int" value="10"/>
+    <param name="offboard_mode_tries" type="int" value="10"/>
+    <param name="reach_radius_sqr" value="0.1"/>
+    <param name="yaw_min_error" value="0.1"/>
+    <param name="waypoint_timeout" value="30.0"/>
+    <param name="moving_tick_resolution" value="0.01"/>
+    <param name="cruise_speed" value="1.0"/>
+  </test>
 </launch>

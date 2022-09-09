@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   dronenav_msgs
+  rostest
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,6 +106,8 @@ find_package(Boost 1.40)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
+ CATKIN_DEPENDS
+ rostest
 )
 
 ###########
@@ -120,9 +123,14 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/dronenav.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/dronenav.cpp
+  src/hovering.cpp
+  src/landed.cpp
+  src/moving.cpp
+  src/reached.cpp
+  src/yawing.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -205,10 +213,15 @@ target_link_libraries(${PROJECT_NAME}_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_dronenav.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+if(CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(takeoff_land_test
+    test/dronenav.test
+    test/takeoff_land_test.cpp)
+  target_link_libraries(takeoff_land_test 
+    ${catkin_LIBRARIES} 
+    ${Boost_LIBRARIES}
+    ${PROJECT_NAME})
+endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

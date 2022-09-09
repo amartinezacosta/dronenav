@@ -28,7 +28,7 @@ namespace dronenav
 
   boost::statechart::result Moving::react(const EvMotionCheckTimeout &)
   {
-    ROS_DEBUG_ONCE_NAMED("dronenav", "MOVING EvMotionCheckoutTimeout EVENT");
+    ROS_INFO_ONCE_NAMED("dronenav", "MOVING EvMotionCheckoutTimeout EVENT");
 
     //Get current drone position and waypoint
     geometry_msgs::Point current = context<Drone>().get_current_position();
@@ -43,9 +43,9 @@ namespace dronenav
     //Is the drone within specified distance radius
     if(distance_sqr < context<Drone>().get_reach_radius())
     {
-        ROS_DEBUG_NAMED("dronenav", "Waypoint reached. Drone position x = %f, y = %f, z = %f", 
+        ROS_INFO_NAMED("dronenav", "Waypoint reached. Drone position x = %f, y = %f, z = %f", 
                 current.x, current.y, current.z);
-        ROS_DEBUG_NAMED("dronenav", "Position reached in %f seconds", time);
+        ROS_INFO_NAMED("dronenav", "Position reached in %f seconds", time);
         
         return transit<Yawing>();   
     }

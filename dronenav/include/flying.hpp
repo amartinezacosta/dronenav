@@ -17,7 +17,12 @@ namespace dronenav
   
       boost::statechart::result react(const EvLand &)
       {
-          //Land the drone
+          /*Position drone*/
+
+          /*Orient drone*/
+
+          /*TODO: use downwards facing camera for precision landing*/
+
           context<Drone>().land();
           return transit<Landed>();
       }

@@ -8,27 +8,27 @@ namespace dronenav
 {
   Landed::Landed()
   {
-      ROS_DEBUG_NAMED("dronenav", "LANDED STATE ENTRY");
+      ROS_INFO_NAMED("dronenav", "LANDED STATE ENTRY");
   }
 
   Landed::~Landed()
   {
-      ROS_DEBUG_NAMED("dronenav", "LANDED STATE ENTRY");
+      ROS_INFO_NAMED("dronenav", "LANDED STATE ENTRY");
   }
 
   boost::statechart::result Landed::react(const EvTakeoff &)
   {
-    ROS_DEBUG_NAMED("dronenav", "LANDED EvTakeoff EVENT");
+    ROS_INFO_NAMED("dronenav", "LANDED EvTakeoff EVENT");
 
     //Set target pose
-    double height = context<Drone>().get_requested_height();
+    geometry_msgs::Point pos = context<Drone>().get_requested_takeoff_position();
+    double yaw = context<Drone>().get_requested_takeoff_yaw();
     double speed = context<Drone>().get_cruise_speed();
 
     context<Drone>().set_cruise_speed(speed);
 
-    //TODO: Initial x y and yaw could be used as well
-    context<Drone>().set_target_position(0.0, 0.0, height);
-    context<Drone>().set_target_yaw(0.0);
+    context<Drone>().set_target_position(pos.x, pos.y, pos.z);
+    context<Drone>().set_target_yaw(yaw);
 
     context<Drone>().arm();
     context<Drone>().offboard();

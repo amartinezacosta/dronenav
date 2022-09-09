@@ -5,7 +5,7 @@ namespace dronenav
 {
   Yawing::Yawing(my_context ctx) : my_base(ctx)
   {
-    ROS_DEBUG_NAMED("dronenav", "YAWING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
 
     double t_res = context<Drone>().get_moving_tick_res();
     yawing_tick = context<Drone>().m_nh.createTimer(ros::Duration(t_res),
@@ -20,7 +20,7 @@ namespace dronenav
 
   Yawing::~Yawing()
   {
-    ROS_DEBUG_NAMED("dronenav", "YAWING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
   }
 
   void Yawing::yawing_tick_callback(const ros::TimerEvent& evt)
@@ -31,7 +31,7 @@ namespace dronenav
 
   boost::statechart::result Yawing::react(const EvYawingCheckTimeout&)
   {
-
+    ROS_INFO_ONCE_NAMED("dronenav", "YAWING EvMotionCheckoutTimeout EVENT");
 
     //TODO: Compare also yaw angle here
     double target = context<Drone>().get_target_yaw();
@@ -41,9 +41,9 @@ namespace dronenav
 
     if(error < context<Drone>().get_yaw_min_error())
     {
-        ROS_DEBUG_NAMED("dronenav", "Yaw angle reached. Drone yaw = %f", 
+        ROS_INFO_NAMED("dronenav", "Yaw angle reached. Drone yaw = %f", 
             (current*180.0)/M_PI);
-        ROS_DEBUG_NAMED("dronenav", "Yaw angle reached in %f seconds", time);
+        ROS_INFO_NAMED("dronenav", "Yaw angle reached in %f seconds", time);
         
         //Post event to check the waypoint queue again
         post_event(EvWaypointDone());

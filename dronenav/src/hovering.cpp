@@ -7,17 +7,17 @@ namespace dronenav
 {
   Hovering::Hovering()
   {
-    ROS_DEBUG_NAMED("dronenav", "HOVERING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "HOVERING STATE ENTRY");
   }
 
   Hovering::~Hovering()
   {
-    ROS_DEBUG_NAMED("dronenav", "HOVERING STATE EXIT");
+    ROS_INFO_NAMED("dronenav", "HOVERING STATE EXIT");
   }
 
   boost::statechart::result Hovering::react(const EvWaypointReceived &)
   {
-    ROS_DEBUG_NAMED("dronenav", "HOVERING EvWaypointReceived EVENT");
+    ROS_INFO_NAMED("dronenav", "HOVERING EvWaypointReceived EVENT");
 
     //Get next waypoint on the queue
     if(context<Drone>().next())

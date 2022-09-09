@@ -11,7 +11,7 @@ namespace dronenav
       m_nh(nh),
       m_pvt_nh(pvt_nh)
   {
-    ROS_DEBUG_NAMED("dronenav", "Drone State Machine Initialized");
+    ROS_INFO_NAMED("dronenav", "Drone State Machine Initialized");
 
     //Parameters
     m_pvt_nh.param("connect_tries", m_connect_tries, 10);
@@ -65,7 +65,7 @@ namespace dronenav
     int tries = m_connect_tries;
     bool connected = false;
 
-    ROS_DEBUG_NAMED("dronenav", "Connecting to flight control unit");
+    ROS_INFO_NAMED("dronenav", "Connecting to flight control unit");
     ros::spinOnce();
     ros::Duration(0.1).sleep();
 
@@ -73,7 +73,7 @@ namespace dronenav
     {
         if(m_mavros_state.connected)
         {
-            ROS_DEBUG_NAMED("dronenav", "Flight control unit connected");
+            ROS_INFO_NAMED("dronenav", "Flight control unit connected");
             connected = true;
             break;
         }
@@ -105,12 +105,12 @@ namespace dronenav
       ros::spinOnce();
       ros::Duration(0.1).sleep();
 
-      ROS_DEBUG_NAMED("dronenav", "Arming vehicle");
+      ROS_INFO_NAMED("dronenav", "Arming vehicle");
       while(tries)
       {
           if(m_mavros_state.armed)
           {
-              ROS_DEBUG_NAMED("dronenav", "Vehicle armed");
+              ROS_INFO_NAMED("dronenav", "Vehicle armed");
               armed = true;
               break;
           }
@@ -141,7 +141,7 @@ namespace dronenav
       ros::spinOnce();
       ros::Duration(0.1).sleep();
 
-      ROS_DEBUG_NAMED("dronenav", "Switching to offboard control");
+      ROS_INFO_NAMED("dronenav", "Switching to offboard control");
       while(tries)
       {
           if(m_mavros_state.mode == "OFFBOARD")
@@ -180,13 +180,13 @@ namespace dronenav
       ros::spinOnce();
       ros::Duration(0.1).sleep();
 
-      ROS_DEBUG_NAMED("dronenav", "Changing cruise speed to %f m/s", cruise_speed);
+      ROS_INFO_NAMED("dronenav", "Changing cruise speed to %f m/s", cruise_speed);
       while(tries)
       {
           if(srv.response.success)
           {
               set = true;
-              ROS_DEBUG_NAMED("dronenav", "Cruise speed set");
+              ROS_INFO_NAMED("dronenav", "Cruise speed set");
               break;
           }
           else
@@ -281,7 +281,7 @@ namespace dronenav
 
   void Drone::pose_stream(void)
   {
-      ROS_DEBUG_NAMED("dronenav", "Pose stream thread initialized");
+      ROS_INFO_NAMED("dronenav", "Pose stream thread initialized");
       ros::Rate rate(20.0);
 
       int sequence = 0;
@@ -319,24 +319,43 @@ namespace dronenav
       }
   }
 
-  bool Drone::takeoff_service(dronenav_msgs::Takeoff::Request &request, 
-          dronenav_msgs::Takeoff::Response &response)
+  bool Drone::takeoff_service(dronenav_msgs::Takeoff::Request& rqt, 
+          dronenav_msgs::Takeoff::Response& rsp)
   {
-      ROS_DEBUG_NAMED("dronenav", "Takeoff service requested, height: %f", request.height);
+    ROS_INFO_NAMED("dronenav", "Takeoff service requested x=%f, y=%f, z=%f, yaw=%f", 
+        rqt.x, rqt.y, rqt.z, rqt.yaw);
+
+    m_takeoff_position.x = rqt.x;
+    m_takeoff_position.y = rqt.y;
+    m_takeoff_position.z = rqt.z;
+    m_takeoff_yaw = rqt.yaw;
     
-      m_requested_height = request.height;
-      process_event(EvTakeoff());
-      
-      return true;
+    rsp.success = true;
+
+    process_event(EvTakeoff());
+    
+    return true;
   }
 
-  bool Drone::land_service(dronenav_msgs::Land::Request &request,
-          dronenav_msgs::Land::Response &response)
+  bool Drone::land_service(dronenav_msgs::Land::Request &rqt,
+          dronenav_msgs::Land::Response &rsp)
   {
-      ROS_DEBUG_NAMED("dronenav", "Landing service requested");
+    ROS_INFO_NAMED("dronenav", 
+    "Landing service requested, override takeoff pose: %s, x=%f, y=%f, z=%f, yaw=%f",
+    rqt.override_takeoff_pose ? "true" : "false", rqt.x, rqt.y, rqt.z, rqt.yaw);
 
-      process_event(EvLand());
+    if(rqt.override_takeoff_pose)
+    {
+        m_takeoff_position.x = rqt.x;
+        m_takeoff_position.y = rqt.y;
+        m_takeoff_position.z = rqt.z;
+        m_takeoff_yaw = rqt.yaw;
+    }
 
-      return true;
+    rsp.success = true;
+
+    process_event(EvLand());
+
+    return true;
   }
 }

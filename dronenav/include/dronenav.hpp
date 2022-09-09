@@ -58,7 +58,8 @@ namespace dronenav
           m_waypoint_reached.publish(msg);
       }
 
-      double get_requested_height(void){ return m_requested_height; }
+      geometry_msgs::Point& get_requested_takeoff_position(void){ return m_takeoff_position; }
+      double& get_requested_takeoff_yaw(void) { return m_takeoff_yaw; }
       void land(void);
       void save_image(void);
       void record_video(void);
@@ -157,7 +158,8 @@ namespace dronenav
       dronenav_msgs::Path current_path; 
       
       //Service request variables
-      double m_requested_height;
+      geometry_msgs::Point m_takeoff_position;
+      double m_takeoff_yaw;
 
       //Parameters
       double m_cruise_speed;
