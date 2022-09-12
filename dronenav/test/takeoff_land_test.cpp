@@ -6,7 +6,7 @@
 #include <landed.hpp>
 #include <flying.hpp>
 #include <hovering.hpp>
-#include <moving.hpp>
+#include <positioning.hpp>
 #include <reached.hpp>
 
 TEST(dronenav_tests, takeoff_land)

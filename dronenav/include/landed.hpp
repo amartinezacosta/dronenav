@@ -7,7 +7,8 @@ namespace dronenav
 {
   struct EvTakeoff : boost::statechart::event<EvTakeoff> {};
 
-  struct Landed : boost::statechart::simple_state<Landed, Navigation>
+  struct LandedTouchdown;
+  struct Landed : boost::statechart::simple_state<Landed, Navigation, LandedTouchdown>
   {
       public:
       Landed();
@@ -15,8 +16,6 @@ namespace dronenav
 
       boost::statechart::result react(const EvTakeoff &);
       typedef boost::statechart::custom_reaction<EvTakeoff>reactions;
-      
-      //typedef boost::statechart::custom_reaction<EvTakeoff> reactions;
   };
 }
 

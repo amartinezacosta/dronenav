@@ -1,8 +1,6 @@
-#include <ros/ros.h>
-
 #include <landed.hpp>
-#include <flying.hpp>
-#include <hovering.hpp>
+
+#include <takeoff_position.hpp>
 
 namespace dronenav
 {
@@ -33,6 +31,6 @@ namespace dronenav
     context<Drone>().arm();
     context<Drone>().offboard();
 
-    return transit<Flying>();
+    return transit<TakeoffPositioning>();
   }
 }

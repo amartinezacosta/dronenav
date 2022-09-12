@@ -125,11 +125,17 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/dronenav.cpp
-  src/hovering.cpp
-  src/landed.cpp
-  src/moving.cpp
-  src/reached.cpp
-  src/yawing.cpp
+  src/landed/landed.cpp
+  src/landed/landed_position.cpp
+  src/landed/landed_yaw.cpp
+  src/landed/landed_touchdown.cpp
+  src/flying/flying.cpp
+  src/flying/takeoff_position.cpp
+  src/flying/takeoff_yaw.cpp
+  src/flying/hovering.cpp
+  src/flying/positioning.cpp
+  src/flying/reached.cpp
+  src/flying/yawing.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -140,15 +146,7 @@ add_library(${PROJECT_NAME}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node 
-  src/main.cpp
-  # src/dronenav.cpp
-  # src/hovering.cpp
-  # src/landed.cpp
-  # src/moving.cpp
-  # src/reached.cpp
-  # src/yawing.cpp
-  )
+add_executable(${PROJECT_NAME}_node  src/main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

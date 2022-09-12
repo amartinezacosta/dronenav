@@ -1,13 +1,15 @@
 #include <hovering.hpp>
-#include <moving.hpp>
+#include <positioning.hpp>
 
 #include <ros/ros.h>
 
 namespace dronenav
 {
-  Hovering::Hovering()
+  Hovering::Hovering(my_context ctx) : my_base(ctx)
   {
     ROS_INFO_NAMED("dronenav", "HOVERING STATE ENTRY");
+  
+    context<Drone>().set_state("HOVERING");
   }
 
   Hovering::~Hovering()
@@ -27,7 +29,7 @@ namespace dronenav
         //First set the position, once reached, then set the yaw angle
         context<Drone>().set_target_position(waypoint.position);
 
-        return transit<Moving>();
+        return transit<Positioning>();
     }
     else
     {

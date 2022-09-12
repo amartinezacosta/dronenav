@@ -3,7 +3,7 @@
 #include <landed.hpp>
 #include <flying.hpp>
 #include <hovering.hpp>
-#include <moving.hpp>
+#include <positioning.hpp>
 
 namespace dronenav
 {

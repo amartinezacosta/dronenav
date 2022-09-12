@@ -19,6 +19,8 @@ namespace dronenav
   {
     ROS_INFO_NAMED("dronenav", "REACHED EvWaypointDone EVENT");
 
+    context<Drone>().set_state("REACHED");
+
     //Waypoint reached, performing inspection task
     dronenav_msgs::Waypoint waypoint = context<Drone>().get_current_waypoint();
 

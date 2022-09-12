@@ -1,35 +1,35 @@
-#include <yawing.hpp>
-#include <reached.hpp>
+#include <landed_yaw.hpp>
+#include <landed_touchdown.hpp>
 
 namespace dronenav
 {
-  Yawing::Yawing(my_context ctx) : my_base(ctx)
+  LandedYawing::LandedYawing(my_context ctx) : my_base(ctx)
   {
     ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
 
     double t_res = context<Drone>().get_moving_tick_res();
-    yawing_tick = context<Drone>().m_nh.createTimer(ros::Duration(t_res),
-        &Yawing::yawing_tick_callback, this);
+    m_timer = context<Drone>().m_nh.createTimer(ros::Duration(t_res),
+        &LandedYawing::tick_callback, this);
 
     double yaw = context<Drone>().get_current_waypoint().yaw;
     context<Drone>().set_target_yaw(yaw);
 
-    time = 0.0;
-    yawing_tick.start();
+    m_t = 0.0;
+    m_timer.start();
   }
 
-  Yawing::~Yawing()
+  LandedYawing::~LandedYawing()
   {
     ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
   }
 
-  void Yawing::yawing_tick_callback(const ros::TimerEvent& evt)
+  void LandedYawing::tick_callback(const ros::TimerEvent& evt)
   {
-    time += context<Drone>().get_moving_tick_res();
-    context<Drone>().process_event(EvYawingCheckTimeout());
+    m_t += context<Drone>().get_moving_tick_res();
+    context<Drone>().process_event(EvLandedYawingTimeout());
   }
 
-  boost::statechart::result Yawing::react(const EvYawingCheckTimeout&)
+  boost::statechart::result LandedYawing::react(const EvLandedYawingTimeout&)
   {
     ROS_INFO_ONCE_NAMED("dronenav", "YAWING EvMotionCheckoutTimeout EVENT");
 
@@ -43,16 +43,13 @@ namespace dronenav
     {
         ROS_INFO_NAMED("dronenav", "Yaw angle reached. Drone yaw = %f", 
             (current*180.0)/M_PI);
-        ROS_INFO_NAMED("dronenav", "Yaw angle reached in %f seconds", time);
+        ROS_INFO_NAMED("dronenav", "Yaw angle reached in %f seconds", m_t);
         
-        //Post event to check the waypoint queue again
-        post_event(EvWaypointDone());
-
-        return transit<Reached>();
+        return transit<LandedTouchdown>();
     }
-    else if(time >= context<Drone>().waypoint_timeout())
+    else if(m_t >= context<Drone>().waypoint_timeout())
     {
-        ROS_WARN_NAMED("dronenav", "Yaw angle could not be reached, time = %f", time);
+        ROS_WARN_NAMED("dronenav", "Yaw angle could not be reached, time = %f", m_t);
         //Throw error
     }
 

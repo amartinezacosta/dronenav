@@ -10,25 +10,16 @@ namespace dronenav
 {
   struct EvLand : boost::statechart::event<EvLand> {};
 
-  struct Hovering;
-  struct Flying : boost::statechart::simple_state<Flying, Navigation, Hovering>
+  struct TakeoffPositioning;
+  struct Flying : boost::statechart::simple_state<Flying, Navigation, TakeoffPositioning>
   {
       public:
-      Flying(){}
-      ~Flying(){}
+      Flying();
+      ~Flying();
   
-      boost::statechart::result react(const EvLand &)
-      {
-          /*Position drone*/
+      boost::statechart::result react(const EvLand &);
 
-          /*Orient drone*/
-
-          /*TODO: use downwards facing camera for precision landing*/
-
-          context<Drone>().land();
-          return transit<Landed>();
-      }
-
+      public:
       typedef boost::statechart::custom_reaction<EvLand> reactions;
   };
 }

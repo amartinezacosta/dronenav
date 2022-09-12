@@ -1,32 +1,34 @@
-#include <moving.hpp>
+#include <positioning.hpp>
 #include <yawing.hpp>
 
 namespace dronenav
 {
-  Moving::Moving(my_context ctx) : my_base(ctx)
+  Positioning::Positioning(my_context ctx) : my_base(ctx)
+  {
+    ROS_DEBUG_NAMED("dronenav", "MOVING STATE ENTRY");
+  
+    context<Drone>().set_state("POSITIONING");
+
+    double t_res = context<Drone>().get_moving_tick_res();
+    m_timer = context<Drone>().m_nh.createTimer(ros::Duration(t_res), 
+            &Positioning::tick_callback, this);
+
+    m_t = 0.0;
+    m_timer.start();
+  }
+
+  Positioning::~Positioning()
   {
       ROS_DEBUG_NAMED("dronenav", "MOVING STATE ENTRY");
-      
-      double t_res = context<Drone>().get_moving_tick_res();
-      moving_tick = context<Drone>().m_nh.createTimer(ros::Duration(t_res), 
-              &Moving::moving_tick_callback, this);
-
-      time = 0.0;
-      moving_tick.start();
   }
 
-  Moving::~Moving()
+  void Positioning::tick_callback(const ros::TimerEvent &event)
   {
-      ROS_DEBUG_NAMED("dronenav", "MOVING STATE ENTRY");
+      m_t += context<Drone>().get_moving_tick_res();
+      context<Drone>().process_event(EvPoisitioningTimeout());
   }
 
-  void Moving::moving_tick_callback(const ros::TimerEvent &event)
-  {
-      time += context<Drone>().get_moving_tick_res();
-      context<Drone>().process_event(EvMotionCheckTimeout());
-  }
-
-  boost::statechart::result Moving::react(const EvMotionCheckTimeout &)
+  boost::statechart::result Positioning::react(const EvPoisitioningTimeout& evt)
   {
     ROS_INFO_ONCE_NAMED("dronenav", "MOVING EvMotionCheckoutTimeout EVENT");
 
@@ -45,15 +47,14 @@ namespace dronenav
     {
         ROS_INFO_NAMED("dronenav", "Waypoint reached. Drone position x = %f, y = %f, z = %f", 
                 current.x, current.y, current.z);
-        ROS_INFO_NAMED("dronenav", "Position reached in %f seconds", time);
+        ROS_INFO_NAMED("dronenav", "Position reached in %f seconds", m_t);
         
         return transit<Yawing>();   
     }
     //Have we timed out?
-    else if(time >= 
-            context<Drone>().waypoint_timeout())
+    else if(m_t >= context<Drone>().waypoint_timeout())
     {
-        ROS_WARN_NAMED("dronenav", "Position could not be reached, time = %f", time);
+        ROS_WARN_NAMED("dronenav", "Position could not be reached, time = %f", m_t);
         
         /*TODO: throw an warning and quit this motion, maybe even stop the drone*/
     }

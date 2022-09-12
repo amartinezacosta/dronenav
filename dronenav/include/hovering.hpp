@@ -7,10 +7,10 @@ namespace dronenav
 {
   struct EvWaypointReceived : boost::statechart::event<EvWaypointReceived> {};
 
-  struct Hovering : boost::statechart::simple_state<Hovering, Flying>
+  struct Hovering : boost::statechart::state<Hovering, Flying>
   {
       public:
-      Hovering();
+      Hovering(my_context ctx);
       ~Hovering();
 
       boost::statechart::result react(const EvWaypointReceived &);
