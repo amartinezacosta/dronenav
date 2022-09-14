@@ -47,7 +47,7 @@
       <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
   </include>
 
-  <test test-name="takeoff_land_test" pkg="dronenav" type="takeoff_land_test"
+  <test test-name="dronenav_test" pkg="dronenav" type="dronenav_test"
     required="true" time-limit="90.0">
     <param name="connect_tries" type="int" value="10"/>
     <param name="arm_tries" type="int" value="10"/>

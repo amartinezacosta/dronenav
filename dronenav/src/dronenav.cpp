@@ -28,7 +28,7 @@ namespace dronenav
     //Subscribers
     m_state_sub = m_nh.subscribe<mavros_msgs::State>("mavros/state", 10, &Drone::state_callback, this);
     m_pose_sub = m_nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 10, &Drone::pose_callback, this);
-    m_waypoint_sub = m_nh.subscribe<dronenav_msgs::Waypoint>("dronenav/waypoints", 100, &Drone::waypoint_callback, this);
+    m_waypoint_sub = m_nh.subscribe<dronenav_msgs::Waypoint>("dronenav/waypoint", 100, &Drone::waypoint_callback, this);
 
     //Publishers
     m_target_pose_pub = m_nh.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);

@@ -60,8 +60,6 @@
       <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
   </include>
 
-  <!-- rviz node -->
-  <node pkg="rviz" type="rviz" name="rviz"/>
   <!-- rqt_console node-->
   <node pkg="rqt_console" type="rqt_console" name="rqt_console"/>
 </launch>

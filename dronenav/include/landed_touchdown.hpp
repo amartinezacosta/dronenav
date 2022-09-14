@@ -15,8 +15,6 @@ namespace dronenav
     public:
     LandedTouchdown(my_context ctx);
     ~LandedTouchdown();
-
-    //typedef boost::statechart::transition<EvTakeoff, Flying> reactions;
   };
 }
 

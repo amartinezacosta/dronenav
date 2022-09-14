@@ -213,10 +213,10 @@ target_link_libraries(${PROJECT_NAME}_node
 
 ## Add gtest based cpp test target and link libraries
 if(CATKIN_ENABLE_TESTING)
-  add_rostest_gtest(takeoff_land_test
-    test/takeoff_land.test
-    test/takeoff_land_test.cpp)
-  target_link_libraries(takeoff_land_test 
+  add_rostest_gtest(dronenav_test
+    test/dronenav.test
+    test/dronenav_test.cpp)
+  target_link_libraries(dronenav_test 
     ${catkin_LIBRARIES} 
     ${Boost_LIBRARIES}
     ${PROJECT_NAME})

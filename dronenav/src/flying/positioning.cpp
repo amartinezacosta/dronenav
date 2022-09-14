@@ -5,7 +5,7 @@ namespace dronenav
 {
   Positioning::Positioning(my_context ctx) : my_base(ctx)
   {
-    ROS_DEBUG_NAMED("dronenav", "MOVING STATE ENTRY");
+    ROS_DEBUG_NAMED("dronenav", "POSITIONING STATE ENTRY");
   
     context<Drone>().set_state("POSITIONING");
 
@@ -19,7 +19,7 @@ namespace dronenav
 
   Positioning::~Positioning()
   {
-      ROS_DEBUG_NAMED("dronenav", "MOVING STATE ENTRY");
+      ROS_DEBUG_NAMED("dronenav", "POSITIONING STATE ENTRY");
   }
 
   void Positioning::tick_callback(const ros::TimerEvent &event)
@@ -30,7 +30,7 @@ namespace dronenav
 
   boost::statechart::result Positioning::react(const EvPoisitioningTimeout& evt)
   {
-    ROS_INFO_ONCE_NAMED("dronenav", "MOVING EvMotionCheckoutTimeout EVENT");
+    ROS_INFO_ONCE_NAMED("dronenav", "POSITIONING EvMotionCheckoutTimeout EVENT");
 
     //Get current drone position and waypoint
     geometry_msgs::Point current = context<Drone>().get_current_position();

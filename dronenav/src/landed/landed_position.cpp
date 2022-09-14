@@ -7,6 +7,8 @@ namespace dronenav
   {
     ROS_INFO_NAMED("dronenav", "LANDED_POSITIONING STATE ENTRY");
     
+    context<Drone>().set_state("LANDED_POSITIONING");
+
     double t_res = context<Drone>().get_moving_tick_res();
     m_timer = context<Drone>().m_nh.createTimer(ros::Duration(t_res), 
             &LandedPositioning::tick_callback, this);

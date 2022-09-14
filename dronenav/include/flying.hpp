@@ -2,7 +2,6 @@
 #define FLYING_HPP_
 
 #include <navigation.hpp>
-#include <landed.hpp>
 
 #include <boost/statechart/state.hpp>
 

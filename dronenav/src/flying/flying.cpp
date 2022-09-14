@@ -1,5 +1,7 @@
 #include <flying.hpp>
+
 #include <landed_position.hpp>
+#include <landed.hpp>
 
 namespace dronenav
 {
@@ -15,7 +17,6 @@ namespace dronenav
 
   boost::statechart::result Flying::react(const EvLand& evt)
   {
-    //Set target pose
     geometry_msgs::Point pos = context<Drone>().get_requested_takeoff_position();
     double yaw = context<Drone>().get_requested_takeoff_yaw();
 
@@ -25,9 +26,6 @@ namespace dronenav
     /*Orient drone*/
     context<Drone>().set_target_yaw(yaw);
 
-    /*TODO: use downwards facing camera for precision landing*/
-
-    //context<Drone>().land();
-    return transit<LandedPositioning>();
+    return transit<Landed>();
   }
 }

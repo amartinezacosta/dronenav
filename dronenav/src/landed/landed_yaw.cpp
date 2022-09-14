@@ -5,7 +5,9 @@ namespace dronenav
 {
   LandedYawing::LandedYawing(my_context ctx) : my_base(ctx)
   {
-    ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "LANDED_YAWING STATE ENTRY");
+
+    context<Drone>().set_state("LANDED_YAWING");
 
     double t_res = context<Drone>().get_moving_tick_res();
     m_timer = context<Drone>().m_nh.createTimer(ros::Duration(t_res),
@@ -20,7 +22,7 @@ namespace dronenav
 
   LandedYawing::~LandedYawing()
   {
-    ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "LANDED_YAWING STATE ENTRY");
   }
 
   void LandedYawing::tick_callback(const ros::TimerEvent& evt)
@@ -31,7 +33,7 @@ namespace dronenav
 
   boost::statechart::result LandedYawing::react(const EvLandedYawingTimeout&)
   {
-    ROS_INFO_ONCE_NAMED("dronenav", "YAWING EvMotionCheckoutTimeout EVENT");
+    ROS_INFO_ONCE_NAMED("dronenav", "LANDED_YAWING EvMotionCheckoutTimeout EVENT");
 
     //TODO: Compare also yaw angle here
     double target = context<Drone>().get_target_yaw();
@@ -41,10 +43,9 @@ namespace dronenav
 
     if(error < context<Drone>().get_yaw_min_error())
     {
-        ROS_INFO_NAMED("dronenav", "Yaw angle reached. Drone yaw = %f", 
-            (current*180.0)/M_PI);
-        ROS_INFO_NAMED("dronenav", "Yaw angle reached in %f seconds", m_t);
-        
+        ROS_INFO_NAMED("dronenav", "Land yaw angle %f reached in %f s", 
+            (current*180.0)/M_PI, m_t);
+      
         return transit<LandedTouchdown>();
     }
     else if(m_t >= context<Drone>().waypoint_timeout())

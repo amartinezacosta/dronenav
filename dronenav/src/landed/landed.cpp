@@ -1,6 +1,7 @@
 #include <landed.hpp>
 
 #include <takeoff_position.hpp>
+#include <flying.hpp>
 
 namespace dronenav
 {
@@ -31,6 +32,6 @@ namespace dronenav
     context<Drone>().arm();
     context<Drone>().offboard();
 
-    return transit<TakeoffPositioning>();
+    return transit<Flying>();
   }
 }

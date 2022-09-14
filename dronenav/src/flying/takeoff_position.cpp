@@ -5,7 +5,7 @@ namespace dronenav
 {
   TakeoffPositioning::TakeoffPositioning(my_context ctx) : my_base(ctx)
   {
-    ROS_DEBUG_NAMED("dronenav", "TAKEOFF POSITIONING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "TAKEOFF_POSITIONING STATE ENTRY");
     
     context<Drone>().set_state("TAKEOFF_POSITIONING");
 
@@ -19,7 +19,7 @@ namespace dronenav
 
   TakeoffPositioning::~TakeoffPositioning()
   {
-      ROS_DEBUG_NAMED("dronenav", "TAKEOFF POSITIONING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "TAKEOFF_POSITIONING STATE ENTRY");
   }
 
   void TakeoffPositioning::tick_callback(const ros::TimerEvent &event)
@@ -30,7 +30,7 @@ namespace dronenav
 
   boost::statechart::result TakeoffPositioning::react(const EvTakeoffPositioningTimeout& evt)
   {
-    ROS_INFO_ONCE_NAMED("dronenav", "MOVING EvMotionCheckoutTimeout EVENT");
+    ROS_INFO_ONCE_NAMED("dronenav", "TAKEOFF_POSITIONING EvTakeoffPositioningTimeout EVENT");
 
     //Get current drone position and waypoint
     geometry_msgs::Point current = context<Drone>().get_current_position();
@@ -45,16 +45,14 @@ namespace dronenav
     //Is the drone within specified distance radius
     if(distance_sqr < context<Drone>().get_reach_radius())
     {
-        ROS_INFO_NAMED("dronenav", "Waypoint reached. Drone position x = %f, y = %f, z = %f", 
-                current.x, current.y, current.z);
-        ROS_INFO_NAMED("dronenav", "Position reached in %f seconds", m_t);
-        
+        ROS_INFO_NAMED("dronenav", "Takeoff position x = %f, y = %f, z = %f reached in %f s", 
+                current.x, current.y, current.z, m_t);        
         return transit<TakeoffYawing>();   
     }
     //Have we timed out?
     else if(m_t >= context<Drone>().waypoint_timeout())
     {
-        ROS_WARN_NAMED("dronenav", "Position could not be reached, time = %f", m_t);
+        ROS_WARN_NAMED("dronenav", "Takeoff position could not be reached, time = %f", m_t);
         
         /*TODO: throw an warning and quit this motion, maybe even stop the drone*/
     }
