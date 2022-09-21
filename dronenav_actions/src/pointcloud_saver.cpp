@@ -12,7 +12,7 @@ namespace dronenav_actions
         &PointCloudSaver::pointcloud_callback, this);
 
       /*Service servers*/
-      m_pointcloud_saver_server = m_nh.advertiseService("dronenav/save/image", 
+      m_pointcloud_saver_server = m_nh.advertiseService("dronenav/save/pointcloud", 
         &PointCloudSaver::pointcloud_save_service, this);
     }
 

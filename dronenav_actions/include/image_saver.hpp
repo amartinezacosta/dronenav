@@ -28,9 +28,10 @@ namespace dronenav_actions
     ros::NodeHandle m_nh;
     ros::NodeHandle m_pvt_nh;
 
+    /*Service server*/
     ros::ServiceServer m_image_save_service;
 
-    image_transport::ImageTransport m_it;
+    /*Image transport subscriber*/
     image_transport::Subscriber m_image_sub;
 
     /*Variables*/

@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   dronenav_msgs
+  rostest
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,6 +107,8 @@ find_package(PCL REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
+  CATKIN_DEPENDS
+  rostest
 )
 
 ###########
@@ -122,9 +125,6 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/dronenav_actions.cpp
-# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -134,15 +134,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(image_saver_node 
-  src/image_saver_node.cpp 
-  src/image_saver.cpp
-  )
-
-add_executable(pointcloud_saver_node 
-  src/pointcloud_saver_node.cpp 
-  src/pointcloud_saver.cpp
-  )
+add_executable(image_saver_node src/image_saver_node.cpp src/image_saver.cpp)
+add_executable(pointcloud_saver_node src/pointcloud_saver_node.cpp src/pointcloud_saver.cpp)
+add_executable(video_saver_node src/video_saver_node.cpp src/video_saver.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +147,8 @@ add_executable(pointcloud_saver_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(image_saver_node dronenav_msgs_generate_messages_cpp)
+add_dependencies(pointcloud_saver_node dronenav_msgs_generate_messages_cpp)
+add_dependencies(video_saver_node dronenav_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(image_saver_node
@@ -163,6 +159,11 @@ target_link_libraries(image_saver_node
 target_link_libraries(pointcloud_saver_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+)
+
+target_link_libraries(video_saver_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 #############
@@ -211,11 +212,26 @@ target_link_libraries(pointcloud_saver_node
 ## Testing ##
 #############
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_dronenav_actions.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+if(CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(dronenav_image_action_test
+    test/dronenav_image_action.test
+    test/dronenav_image_action_test.cpp
+    src/image_saver.cpp
+  )
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+  add_rostest_gtest(dronenav_video_action_test
+    test/dronenav_video_action.test
+    test/dronenav_video_action_test.cpp
+    src/video_saver.cpp
+  )
+
+  target_link_libraries(dronenav_image_action_test 
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+  )
+
+  target_link_libraries(dronenav_video_action_test 
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+  )
+endif()

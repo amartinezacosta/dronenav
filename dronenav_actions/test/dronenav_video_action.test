@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
-<!-- Launch file to test the dronenav node using PX4 SITL and Gazebo -->
 <launch>
-  <!-- Simulation arguments-->
+    <!-- Simulation arguments-->
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
   <arg name="z" default="0.0" />
@@ -22,23 +21,7 @@
   <arg name="respawn_mavros" default="false" />
   <arg name="interactive" default="true" />
 
-  <!-- dronenav node -->
-  <node pkg="dronenav" type="dronenav_node" name="dronenav" output="screen">
-    <param name="connect_tries" type="int" value="10"/>
-    <param name="arm_tries" type="int" value="10"/>
-    <param name="offboard_mode_tries" type="int" value="10"/>
-    <param name="reach_radius_sqr" value="0.1"/>
-    <param name="yaw_min_error" value="0.1"/>
-    <param name="waypoint_timeout" value="30.0"/>
-    <param name="moving_tick_resolution" value="0.01"/>
-    <param name="cruise_speed" value="1.0"/>
-  </node>
-
-  <!-- Camera static transformation -->
-  <node pkg="tf" type="static_transform_publisher" name="tf_camera_baseLink"
-    args="0.1 0.0 0.0 -1.57 0 -1.57 base_link camera_link 30"/>
-
-  <!-- PX4 SITL and Gazebo Simulation-->
+    <!-- PX4 SITL and Gazebo Simulation-->
   <include file="$(find px4)/launch/posix_sitl.launch">
       <arg name="x" value="$(arg x)" />
       <arg name="y" value="$(arg y)" />
@@ -63,4 +46,21 @@
       <arg name="fcu_url" value="$(arg fcu_url)" />
       <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
   </include>
+
+  <!-- dronenav node -->
+  <node pkg="dronenav" type="dronenav_node" name="dronenav" output="screen">
+    <param name="connect_tries" type="int" value="10"/>
+    <param name="arm_tries" type="int" value="10"/>
+    <param name="offboard_mode_tries" type="int" value="10"/>
+    <param name="reach_radius_sqr" value="0.1"/>
+    <param name="yaw_min_error" value="0.1"/>
+    <param name="waypoint_timeout" value="30.0"/>
+    <param name="moving_tick_resolution" value="0.01"/>
+    <param name="cruise_speed" value="1.0"/>
+  </node>
+
+  <!--Test node -->
+  <test test-name="dronenav_actions_test" pkg="dronenav_actions" type="dronenav_video_action_test">
+    <param name="image_topic" type="string" value="camera/rgb/image_raw"/>
+  </test>
 </launch>
