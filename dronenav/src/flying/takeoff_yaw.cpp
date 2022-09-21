@@ -13,8 +13,8 @@ namespace dronenav
     m_timer = context<Drone>().m_nh.createTimer(ros::Duration(t_res),
         &TakeoffYawing::tick_callback, this);
 
-    double yaw = context<Drone>().get_current_waypoint().yaw;
-    context<Drone>().set_target_yaw(yaw);
+    double takeoff_yaw = context<Drone>().get_requested_takeoff_yaw();
+    context<Drone>().set_target_yaw(takeoff_yaw);
 
     m_t = 0.0;
     m_timer.start();

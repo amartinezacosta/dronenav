@@ -23,9 +23,6 @@ namespace dronenav
     /*Position drone*/
     context<Drone>().set_target_position(pos.x, pos.y, pos.z);
 
-    /*Orient drone*/
-    context<Drone>().set_target_yaw(yaw);
-
     return transit<Landed>();
   }
 }

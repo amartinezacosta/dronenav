@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   cv_bridge
   image_transport
+  rostest
+  dronenav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -201,11 +203,16 @@ target_link_libraries(${PROJECT_NAME}_node
 ## Testing ##
 #############
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_qr_tracking.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+if(CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(qr_tracking_test
+    test/qr_tracking.test
+    test/qr_tracking_test.cpp
+    src/qr_tracking.cpp
+  )
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+  target_link_libraries(qr_tracking_test 
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    zbar
+  )
+endif()

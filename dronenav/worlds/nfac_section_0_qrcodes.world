@@ -69,5 +69,18 @@
             <real_time_update_rate>250</real_time_update_rate>
             <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
         </physics>
+
+        <gui fullscreen='0'>
+            <camera name="gzclient_camera">
+                    <track_visual>
+                    <name>iris</name>
+                    <static>true</static>
+                    <use_model_frame>true</use_model_frame>
+                    <inherit_yaw>true</inherit_yaw>
+                    <xyz>-3 0 0</xyz>
+                </track_visual>
+            </camera>
+        </gui>
+
     </world>
 </sdf>

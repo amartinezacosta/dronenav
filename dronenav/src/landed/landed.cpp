@@ -27,7 +27,7 @@ namespace dronenav
     context<Drone>().set_cruise_speed(speed);
 
     context<Drone>().set_target_position(pos.x, pos.y, pos.z);
-    context<Drone>().set_target_yaw(yaw);
+    //context<Drone>().set_target_yaw(yaw);
 
     context<Drone>().arm();
     context<Drone>().offboard();

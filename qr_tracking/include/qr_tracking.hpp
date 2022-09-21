@@ -25,8 +25,8 @@ namespace qr_tracking
     ros::NodeHandle m_nh;
     ros::NodeHandle m_pvt_nh;
 
-    image_transport::ImageTransport m_it;
     image_transport::Subscriber m_image_sub;
+    image_transport::Publisher m_image_pub;
 
     zbar::ImageScanner m_scanner;
 
