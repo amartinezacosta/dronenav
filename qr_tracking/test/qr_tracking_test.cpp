@@ -13,13 +13,13 @@ TEST_F(DronenavTestFixture, qr_tracking_test)
   takeoff_client.call(takeoff_srv);
   ASSERT_TRUE(takeoff_srv.response.success);
 
-  wait_for_state(dronenav_msgs::Status::HOVERING_STATE, 20.0);
+  wait_for_state(dronenav_msgs::Status::HOVERING_STATE, 30.0);
   EXPECT_STREQ(status.state.c_str(), 
     dronenav_msgs::Status::HOVERING_STATE.c_str());
 
   /*Wait here until we read a qr code*/
   ros::Duration(20.0).sleep();
-  //EXPECT_STREQ(qr_tracker.get_message(), "WAYPOINT_0");
+  //EXPECT_STREQ(qr_tracker.get_message(), "WAYPOINT 2");
 
   /*Land request*/
 }
