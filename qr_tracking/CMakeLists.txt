@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   rostest
   dronenav_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  tf2_sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,6 +112,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
+ CATKIN_DEPENDS
+ rostest
 )
 
 ###########
@@ -123,9 +129,9 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/qr_tracking.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/qr_tracking.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -137,7 +143,6 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
   src/main.cpp
-  src/qr_tracking.cpp
   )
 
 ## Rename C++ executable without prefix
@@ -152,6 +157,7 @@ add_executable(${PROJECT_NAME}_node
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   zbar
@@ -207,10 +213,9 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(qr_tracking_test
     test/qr_tracking.test
     test/qr_tracking_test.cpp
-    src/qr_tracking.cpp
   )
-
   target_link_libraries(qr_tracking_test 
+    ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${OpenCV_LIBS}
     zbar

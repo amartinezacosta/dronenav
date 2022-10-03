@@ -19,7 +19,7 @@ namespace dronenav
 
   Positioning::~Positioning()
   {
-      ROS_DEBUG_NAMED("dronenav", "POSITIONING STATE ENTRY");
+      ROS_DEBUG_NAMED("dronenav", "POSITIONING STATE EXIT");
   }
 
   void Positioning::tick_callback(const ros::TimerEvent &event)

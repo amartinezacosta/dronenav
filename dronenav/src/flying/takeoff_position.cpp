@@ -19,7 +19,7 @@ namespace dronenav
 
   TakeoffPositioning::~TakeoffPositioning()
   {
-    ROS_INFO_NAMED("dronenav", "TAKEOFF_POSITIONING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "TAKEOFF_POSITIONING STATE EXIT");
   }
 
   void TakeoffPositioning::tick_callback(const ros::TimerEvent &event)

@@ -10,6 +10,7 @@
 #include <dronenav_msgs/Land.h>
 #include <dronenav_msgs/Waypoint.h>
 #include <dronenav_msgs/Status.h>
+#include <dronenav_msgs/TrackedCodes.h>
 
 class DronenavTestFixture : public ::testing::Test
 {
@@ -24,8 +25,11 @@ class DronenavTestFixture : public ::testing::Test
     status_sub = nh.subscribe<dronenav_msgs::Status>("dronenav/status", 50, 
       &DronenavTestFixture::status_callback, this);
 
+    tracked_objects_sub = nh.subscribe<dronenav_msgs::TrackedCodes>("dronenav/qr_tracker/tracked",
+      10, &DronenavTestFixture::tracked_callback, this);
+
     /*Publishers*/
-    //waypoint_pub = nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint", 100);
+    waypoint_pub = nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint", 100);
   }
 
   void TearDown()
@@ -36,6 +40,11 @@ class DronenavTestFixture : public ::testing::Test
   void status_callback(const dronenav_msgs::Status::ConstPtr& msg)
   {
     status = *msg;
+  }
+
+  void tracked_callback(const dronenav_msgs::TrackedCodes::ConstPtr& msg)
+  {
+    tracked_codes = *msg;
   }
 
   void wait_for_state(const std::string state, double time)
@@ -54,13 +63,14 @@ class DronenavTestFixture : public ::testing::Test
 
   /*Subscribers*/
   ros::Subscriber status_sub;
+  ros::Subscriber tracked_objects_sub;
 
   /*Publisher*/
   ros::Publisher waypoint_pub;
 
   /*Variables*/
   dronenav_msgs::Status status;
-  // dronenav_msgs::Waypoint waypoint;
+  dronenav_msgs::TrackedCodes tracked_codes;
 };
 
 #endif

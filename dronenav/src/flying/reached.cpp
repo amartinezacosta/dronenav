@@ -12,7 +12,7 @@ namespace dronenav
 
   Reached::~Reached()
   {
-      ROS_INFO_NAMED("dronenav", "REACHED STATE ENTRY");
+      ROS_INFO_NAMED("dronenav", "REACHED STATE EXIT");
   }
 
   boost::statechart::result Reached::react(const EvWaypointDone &)

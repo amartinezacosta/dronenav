@@ -55,6 +55,8 @@ add_message_files(
    PlannerStatus.msg
    Status.msg
    Waypoint.msg
+   Code.msg
+   TrackedCodes.msg
   )
 
 ## Generate services in the 'srv' folder

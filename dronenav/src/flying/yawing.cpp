@@ -22,7 +22,7 @@ namespace dronenav
 
   Yawing::~Yawing()
   {
-    ROS_INFO_NAMED("dronenav", "YAWING STATE ENTRY");
+    ROS_INFO_NAMED("dronenav", "YAWING STATE EXIT");
   }
 
   void Yawing::yawing_tick_callback(const ros::TimerEvent& evt)
@@ -54,7 +54,8 @@ namespace dronenav
     }
     else if(time >= context<Drone>().waypoint_timeout())
     {
-        ROS_WARN_NAMED("dronenav", "Yaw angle could not be reached, time = %f", time);
+        ROS_WARN_ONCE_NAMED("dronenav", "Yaw angle could not be reached, error = %f, time = %f", 
+          error, time);
         //Throw error
     }
 

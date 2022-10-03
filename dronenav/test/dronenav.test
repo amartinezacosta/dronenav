@@ -23,28 +23,28 @@
 
     <!-- PX4 SITL and Gazebo Simulation-->
   <include file="$(find px4)/launch/posix_sitl.launch">
-      <arg name="x" value="$(arg x)" />
-      <arg name="y" value="$(arg y)" />
-      <arg name="z" value="$(arg z)" />
-      <arg name="R" value="$(arg R)" />
-      <arg name="P" value="$(arg P)" />
-      <arg name="Y" value="$(arg Y)" />
-      <arg name="world" value="$(arg world)" />
-      <arg name="vehicle" value="iris" />
-      <arg name="sdf" value="$(arg sdf)" />
-      <arg name="gui" value="$(arg gui)" />
-      <arg name="interactive" value="$(arg interactive)" />
-      <arg name="debug" value="$(arg debug)" />
-      <arg name="verbose" value="$(arg verbose)" />
-      <arg name="paused" value="$(arg paused)" />
-      <arg name="respawn_gazebo" value="$(arg respawn_gazebo)" />
+    <arg name="x" value="$(arg x)" />
+    <arg name="y" value="$(arg y)" />
+    <arg name="z" value="$(arg z)" />
+    <arg name="R" value="$(arg R)" />
+    <arg name="P" value="$(arg P)" />
+    <arg name="Y" value="$(arg Y)" />
+    <arg name="world" value="$(arg world)" />
+    <arg name="vehicle" value="iris" />
+    <arg name="sdf" value="$(arg sdf)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="interactive" value="$(arg interactive)" />
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="verbose" value="$(arg verbose)" />
+    <arg name="paused" value="$(arg paused)" />
+    <arg name="respawn_gazebo" value="$(arg respawn_gazebo)" />
   </include>
 
   <!-- mavros node -->
   <include file="$(find mavros)/launch/px4.launch">
-      <arg name="gcs_url" value="" />
-      <arg name="fcu_url" value="$(arg fcu_url)" />
-      <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
+    <arg name="gcs_url" value="" />
+    <arg name="fcu_url" value="$(arg fcu_url)" />
+    <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
   </include>
 
   <test test-name="dronenav_test" pkg="dronenav" type="dronenav_test"

@@ -578,5 +578,4 @@ namespace object_recognition
 
       m_marker_pub.publish(marker);
   }
-
 }

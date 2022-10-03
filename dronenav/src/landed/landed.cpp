@@ -12,7 +12,7 @@ namespace dronenav
 
   Landed::~Landed()
   {
-      ROS_INFO_NAMED("dronenav", "LANDED STATE ENTRY");
+      ROS_INFO_NAMED("dronenav", "LANDED STATE EXIT");
   }
 
   boost::statechart::result Landed::react(const EvTakeoff &)
