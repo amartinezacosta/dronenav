@@ -12,7 +12,7 @@
 #include <std_msgs/Empty.h>
 #include <dronenav_msgs/Waypoint.h>
 #include <dronenav_msgs/Path.h>
-#include <dronenav_msgs/PathGoal.h>
+#include <dronenav_msgs/GlobalGoal.h>
 #include <dronenav_msgs/PlannerStatus.h>
 
 #include <queue>
@@ -23,15 +23,6 @@
 
 namespace global_planner
 {
-    /*
-    struct EvGoalReceived : boost::statechart::event<EvGoalReceived> {};
-    struct EvPathFound : boost::statechart::event<EvPathFound> {};
-    struct EvPathNotFound : boost::statechart::event<EvPathNotFound> {};
-    struct EvPathDone : boost::statechart::event<EvPathDone> {};
-    struct EvPathInterrupt : boost::statechart::event<EvPathInterrupt> {};
-    struct EvInterruptHandled : boost::statechart::event<EvInterruptHandled> {};
-    */
-
     struct Active;
     struct GlobalPlanner : boost::statechart::state_machine<GlobalPlanner, Active>
     {
@@ -42,12 +33,12 @@ namespace global_planner
         void next_goal(void){ m_current_goal = m_goal_queue.front(); }
         void dequeue_goal(void){ m_goal_queue.pop_front(); }
 
-        void enqueue_front(dronenav_msgs::PathGoal& waypoint){ m_goal_queue.push_front(waypoint); }
-        void enqueue_back(dronenav_msgs::PathGoal& waypoint){ m_goal_queue.push_back(waypoint); }
+        void enqueue_front(dronenav_msgs::GlobalGoal& waypoint){ m_goal_queue.push_front(waypoint); }
+        void enqueue_back(dronenav_msgs::GlobalGoal& waypoint){ m_goal_queue.push_back(waypoint); }
 
         dronenav_msgs::Path& get_current_path(void){ return m_current_path; }
-        dronenav_msgs::PathGoal& get_current_goal(void){ return m_current_goal; }
-        dronenav_msgs::PathGoal& get_new_goal(void){ return m_new_goal; }
+        dronenav_msgs::GlobalGoal& get_current_goal(void){ return m_current_goal; }
+        dronenav_msgs::GlobalGoal& get_new_goal(void){ return m_new_goal; }
         void set_path_found(bool result) { m_path_found = result; }
         bool get_path_found(void) { return m_path_found; }
 
@@ -74,14 +65,14 @@ namespace global_planner
             m_start = msg->pose.position; 
         }
 
-        void goal_callback(const dronenav_msgs::PathGoal::ConstPtr& msg);
+        void goal_callback(const dronenav_msgs::GlobalGoal::ConstPtr& msg);
         void rviz_goal_callback(const geometry_msgs::PointStamped::ConstPtr &msg);
         void path_done_callback(const std_msgs::Empty::ConstPtr& msg);
         void status_tick_callback(const ros::TimerEvent& evt);
 
         void draw_vertices(std::vector<AStarVertex>& vertices);
         void draw_edges(std::vector<AStarVertex>& vertices);
-        void draw_goal(dronenav_msgs::PathGoal& goal);
+        void draw_goal(dronenav_msgs::GlobalGoal& goal);
         void draw_start(void);
         void draw_path(void);
         void log_path_waypoints(void);
@@ -94,7 +85,7 @@ namespace global_planner
         void reconstruct_path(int priority, AStarVertex *current);
         double compute_yaw(dronenav_msgs::Waypoint& current, dronenav_msgs::Waypoint& next);
 
-        void update_vertices(dronenav_msgs::PathGoal& goal,
+        void update_vertices(dronenav_msgs::GlobalGoal& goal,
             std::vector<AStarVertex>& vertices);
         void update_edges(std::vector<AStarVertex>& vertices);
 
@@ -105,10 +96,10 @@ namespace global_planner
         ros::NodeHandle m_pvt_nh;
 
         geometry_msgs::Point m_start;
-        dronenav_msgs::PathGoal m_current_goal;
-        dronenav_msgs::PathGoal m_new_goal;
+        dronenav_msgs::GlobalGoal m_current_goal;
+        dronenav_msgs::GlobalGoal m_new_goal;
         dronenav_msgs::Path m_current_path;
-        std::deque<dronenav_msgs::PathGoal> m_goal_queue;
+        std::deque<dronenav_msgs::GlobalGoal> m_goal_queue;
         ros::Timer m_status_timer;
         bool m_path_found;
 

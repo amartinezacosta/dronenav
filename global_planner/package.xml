@@ -5,17 +5,25 @@
   <description>dronenav global planner package using ocotomap</description>
   <maintainer email="amartinezacosta@miners.utep.edu">amartinezacosta</maintainer>
 
-  <license>BSD</license>
+  <license>MIT</license>
   <author email="amartinezacosta@miners.utep.edu">Alejandro Martinez Acosta</author>
 
   <buildtool_depend>catkin</buildtool_depend>
+ 
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>dronenav_msgs</build_depend>
+  <build_depend>rostest</build_depend>
+
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>dronenav_msgs</build_export_depend>
+
   <exec_depend>roscpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>dronenav_msgs</exec_depend>
+  <exec_depend>rostest</exec_depend>
+
+  <test_depend>rostest</test_depend>
+  <test_depend>rosunit</test_depend>
 </package>

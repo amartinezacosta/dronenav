@@ -17,7 +17,7 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "skipper");
+    ros::init(argc, argv, "dronenav_node");
     ros::NodeHandle nh;
     ros::NodeHandle pvt_nh("~");
 

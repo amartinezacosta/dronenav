@@ -7,8 +7,7 @@ namespace global_planner
 {
   Planning::Planning(my_context ctx) : my_base(ctx)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "PLANNING STATE ENTRY");
+    ROS_INFO_NAMED("global_planner", "PLANNING STATE ENTRY");
 
     if(context<GlobalPlanner>().find_global_path())
     {
@@ -18,9 +17,9 @@ namespace global_planner
     else
     {
       context<GlobalPlanner>().set_path_found(false);
-      dronenav_msgs::PathGoal& goal = context<GlobalPlanner>().get_current_goal();
+      dronenav_msgs::GlobalGoal& goal = context<GlobalPlanner>().get_current_goal();
 
-      ROS_ERROR("No path to x=%f, y=%f, z=%f was found",
+      ROS_WARN_NAMED("global_planner", "No path to x=%f, y=%f, z=%f was found",
         goal.x, goal.y, goal.z);
 
       context<GlobalPlanner>().dequeue_goal();
@@ -32,22 +31,19 @@ namespace global_planner
 
   Planning::~Planning()
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "PLANNING STATE EXIT");
+    ROS_INFO_NAMED("global_planner", "PLANNING STATE EXIT");
   }
 
   boost::statechart::result Planning::react(const EvPathFound& ev)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "PLANNING STATE EvPathFound EVENT");
+    ROS_INFO_NAMED("global_planner", "PLANNING EvPathFound EVENT");
 
     return transit<Sending>();
   }
 
   boost::statechart::result Planning::react(const EvPathNotFound& ev)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "PLANNING STATE EvPathNotFound EVENT");
+    ROS_INFO_NAMED("global_planner", "PLANNING EvPathNotFound EVENT");
 
     return transit<Waiting>();
   }

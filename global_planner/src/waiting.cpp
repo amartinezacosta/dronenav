@@ -5,20 +5,17 @@ namespace global_planner
 {
   Waiting::Waiting()
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "WAITING STATE ENTRY");
+    ROS_INFO_NAMED("global_planner", "WAITING STATE ENTRY");
   }
 
   Waiting::~Waiting()
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "WAITING STATE EXIT");
+    ROS_INFO_NAMED("global_planner", "WAITING STATE EXIT");
   }
 
   boost::statechart::result Waiting::react(const EvGoalReceived& ev)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "WAITING STATE EvGoalReceived EVENT");
+    ROS_INFO_NAMED("global_planner", "WAITING EvGoalReceived EVENT");
     
     if(!context<GlobalPlanner>().goal_queue_empty())
     {

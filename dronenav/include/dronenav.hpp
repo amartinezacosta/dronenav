@@ -5,7 +5,7 @@
 
 #include <dronenav_msgs/Waypoint.h>
 #include <dronenav_msgs/Path.h>
-#include <dronenav_msgs/PathGoal.h>
+// #include <dronenav_msgs/PathGoal.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>

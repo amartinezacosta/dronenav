@@ -31,7 +31,7 @@ namespace object_recognition
 
       //Publishers
       m_marker_pub = m_nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
-      m_global_goal_pub = m_nh.advertise<dronenav_msgs::PathGoal>("dronenav_msgs/global_goal", 50);
+      m_global_goal_pub = m_nh.advertise<dronenav_msgs::GlobalGoal>("dronenav_msgs/global_goal", 50);
       m_image_pub = it.advertise("dronenav_msgs/net_image", 1);
 
       //Subscribers

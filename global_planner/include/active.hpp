@@ -18,20 +18,17 @@ namespace global_planner
     public:
     Active()
     {
-      ROS_DEBUG_NAMED("Global Planner HSM", 
-        "ACTIVE STATE ENTRY");
+      ROS_INFO_NAMED("global_planner", "ACTIVE STATE ENTRY");
     }
 
     ~Active()
     {
-      ROS_DEBUG_NAMED("Global Planner HSM", 
-        "ACTIVE STATE EXIT");
+      ROS_INFO_NAMED("global_planner", "ACTIVE STATE EXIT");
     }
 
     boost::statechart::result react(const EvPathInterrupt& ev)
     {
-      ROS_DEBUG_NAMED("Global Planner HSM", 
-        "ACTIVE STATE EvPathInterrupt EVENT");
+      ROS_INFO_NAMED("global_planner", "ACTIVE STATE EvPathInterrupt EVENT");
       return transit<Interrupt>();
     }
 

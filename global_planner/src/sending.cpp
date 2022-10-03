@@ -6,8 +6,7 @@ namespace global_planner
 
   Sending::Sending(my_context ctx) : my_base(ctx)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "SENDING STATE ENTRY");
+    ROS_INFO_NAMED("global_planner", "SENDING STATE ENTRY");
 
     m_reached_sub = context<GlobalPlanner>().m_nh.subscribe<
       dronenav_msgs::Waypoint>("skipper/waypoint/reached", 50,
@@ -16,8 +15,7 @@ namespace global_planner
 
   Sending::~Sending()
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "SENDING STATE EXIT");
+    ROS_INFO_NAMED("global_planner", "SENDING STATE EXIT"); 
   }
 
   void Sending::reached_callback(const dronenav_msgs::Waypoint::ConstPtr& msg)
@@ -30,8 +28,7 @@ namespace global_planner
 
   boost::statechart::result Sending::react(const EvPathDone& ev)
   {
-    ROS_DEBUG_NAMED("Global Planner HSM", 
-      "SENDING STATE EvPathDone EVENT");
+    ROS_INFO_NAMED("global_planner", "SENDING EvPathDone EVENT");
     
     context<GlobalPlanner>().dequeue_goal();
     post_event(EvGoalReceived());

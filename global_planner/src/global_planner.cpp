@@ -6,7 +6,8 @@ namespace global_planner
 {
     GlobalPlanner::GlobalPlanner(ros::NodeHandle nh, ros::NodeHandle pvt_nh) : 
         m_nh(nh), 
-        m_pvt_nh(pvt_nh)
+        m_pvt_nh(pvt_nh),
+        m_tree(nullptr)
     {
         //Parameters
         m_pvt_nh.param("depth", m_depth_level, 13);
@@ -28,10 +29,10 @@ namespace global_planner
         m_octomap_sub = m_nh.subscribe("octomap_full", 10, &GlobalPlanner::octomap_callback, this);
         m_position_sub = m_nh.subscribe("mavros/local_position/pose", 200, &GlobalPlanner::position_callback, this);
         m_rviz_goal_sub = m_nh.subscribe("/clicked_point", 10, &GlobalPlanner::rviz_goal_callback, this);
-        m_goal_sub = m_nh.subscribe("dronenav/global_goal", 100, &GlobalPlanner::goal_callback, this);
+        m_goal_sub = m_nh.subscribe("dronenav/global_planner/goal", 100, &GlobalPlanner::goal_callback, this);
 
         //Publishers
-        m_path_planner_status_pub = m_nh.advertise<dronenav_msgs::PlannerStatus>("dronenav_msgs/global_planner/status", 50);
+        m_path_planner_status_pub = m_nh.advertise<dronenav_msgs::PlannerStatus>("dronenav/global_planner/status", 50);
         m_graph_marker_pub = m_nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
         m_waypoint_pub = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoints", 100);
 
@@ -56,7 +57,7 @@ namespace global_planner
         process_event(EvGoalReceived());
     }
 
-    void GlobalPlanner::goal_callback(const dronenav_msgs::PathGoal::ConstPtr& msg)
+    void GlobalPlanner::goal_callback(const dronenav_msgs::GlobalGoal::ConstPtr& msg)
     {
         //Priority checking must happen here!
         m_new_goal = *msg;
@@ -83,13 +84,19 @@ namespace global_planner
 
     bool GlobalPlanner::find_global_path(void)
     {
-        ROS_INFO("Attempting to find path from provided navigation point...");
+        if(m_tree == nullptr) 
+        {
+            ROS_WARN_NAMED("global_planner", "Octomap tree is not valid");
+            return false;
+        }
+
+        ROS_INFO_NAMED("global_planner", "Attempting to find path from provided navigation point...");
         
         ros::WallTime start, end;
         start = ros::WallTime::now();
 
         std::vector<AStarVertex> vertices; 
-        //Step 1. Find vertices withing bounding box
+        //Step 1. Find vertices within bounding box
         update_vertices(m_current_goal, vertices);
         //Step 2. Find edges between vertices
         update_edges(vertices);
@@ -98,12 +105,12 @@ namespace global_planner
 
         end = ros::WallTime::now();
         double execution_time = (end - start).toNSec() * 1e-6;
-        ROS_INFO("Path planned execution time (ms): %f", execution_time);
+        ROS_INFO_NAMED("global_planner", "Path planned execution time (ms): %f", execution_time);
 
         return found;
     }
 
-    void GlobalPlanner::update_vertices(dronenav_msgs::PathGoal& goal,
+    void GlobalPlanner::update_vertices(dronenav_msgs::GlobalGoal& goal,
         std::vector<AStarVertex>& vertices)
     {
         //Start and goal always go first
@@ -394,7 +401,8 @@ namespace global_planner
         visualization_msgs::Marker marker;
         marker.header.frame_id = "map";
         marker.header.stamp = ros::Time();
-        marker.ns = "vertices";
+        marker.lifetime = ros::Duration(60.0);
+        marker.ns = "global_planner";
         marker.pose.orientation.w = 1.0;
         marker.id = 0;
         marker.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -428,7 +436,8 @@ namespace global_planner
         visualization_msgs::Marker marker;
         marker.header.frame_id = "map";
         marker.header.stamp = ros::Time();
-        marker.ns = "edges";
+        marker.lifetime = ros::Duration(60.0);
+        marker.ns = "global_planner";
         marker.pose.orientation.w = 1.0;
         marker.id = 1;
         marker.type = visualization_msgs::Marker::LINE_LIST;
@@ -465,14 +474,14 @@ namespace global_planner
             m_graph_marker_pub.publish(marker);
     }
 
-    void GlobalPlanner::draw_goal(dronenav_msgs::PathGoal& goal)
+    void GlobalPlanner::draw_goal(dronenav_msgs::GlobalGoal& goal)
     {
         //Graph goal marker
         visualization_msgs::Marker marker;
         marker.header.frame_id = "map";
         marker.header.stamp = ros::Time();
-        marker.ns = "goal";
-        marker.id = 3;
+        marker.ns = "global_planner";
+        marker.id = 2;
         marker.type = visualization_msgs::Marker::SPHERE;
         marker.action = visualization_msgs::Marker::ADD;
 
@@ -498,8 +507,8 @@ namespace global_planner
         visualization_msgs::Marker marker;
         marker.header.frame_id = "map";
         marker.header.stamp = ros::Time();
-        marker.ns = "start";
-        marker.id = 2;
+        marker.ns = "global_planner";
+        marker.id = 3;
         marker.type = visualization_msgs::Marker::SPHERE;
         marker.action = visualization_msgs::Marker::ADD;
 
@@ -525,7 +534,7 @@ namespace global_planner
         visualization_msgs::Marker marker;
         marker.header.frame_id = "map";
         marker.header.stamp = ros::Time();
-        marker.ns = "global_path";
+        marker.ns = "global_planner";
         marker.id = 4;
         marker.type = visualization_msgs::Marker::LINE_LIST;
         marker.action = visualization_msgs::Marker::ADD;

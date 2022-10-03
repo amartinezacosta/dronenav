@@ -105,6 +105,8 @@ find_package(Boost 1.40)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
+  CATKIN_DEPENDS
+  rostest
 )
 
 ###########
@@ -121,9 +123,13 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/global_planner.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/global_planner.cpp
+  src/interrupt.cpp
+  src/planning.cpp
+  src/sending.cpp
+  src/waiting.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -135,11 +141,11 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
   src/main.cpp
-  src/global_planner.cpp
-  src/interrupt.cpp
-  src/planning.cpp
-  src/sending.cpp
-  src/waiting.cpp
+  # src/global_planner.cpp
+  # src/interrupt.cpp
+  # src/planning.cpp
+  # src/sending.cpp
+  # src/waiting.cpp
   )
 
 ## Rename C++ executable without prefix
@@ -154,6 +160,7 @@ add_executable(${PROJECT_NAME}_node
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node 
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${OCTOMAP_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -204,12 +211,15 @@ target_link_libraries(${PROJECT_NAME}_node
 #############
 ## Testing ##
 #############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_global_planner.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+if(CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(global_planner_test
+    test/global_planner.test
+    test/global_planner_test.cpp
+  )
+  target_link_libraries(global_planner_test 
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    ${OCTOMAP_LIBRARIES}
+    ${Boost_LIBRARIES}
+  )
+endif()

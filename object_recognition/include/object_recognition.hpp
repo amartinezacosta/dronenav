@@ -25,7 +25,7 @@
 #include <tf2/LinearMath/Vector3.h>
 
 #include <dronenav_msgs/Waypoint.h>
-#include <dronenav_msgs/PathGoal.h>
+#include <dronenav_msgs/GlobalGoal.h>
 
 #include <object.hpp>
 

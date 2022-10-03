@@ -70,6 +70,15 @@ TEST_F(DronenavTestFixture, qr_tracking_test)
   EXPECT_STREQ(status.state.c_str(), 
     dronenav_msgs::Status::LANDED_TOUCHDOWN_STATE.c_str());
 
+  /*Log tracking information*/
+  for(dronenav_msgs::Code& code : tracked_codes.codes)
+  {
+    ROS_INFO_NAMED("qr_tracking", "id=%i", code.id);
+    ROS_INFO_NAMED("qr_tracking", "type=%s", code.type.c_str());
+    ROS_INFO_NAMED("qr_tracking", "data=%s", code.data.c_str());
+    ROS_INFO_NAMED("qr_tracking", "x=%f, y=%f, z=%f", code.x, code.y, code.z);
+  }
+
   ros::Duration(10.0).sleep();
 }
 
