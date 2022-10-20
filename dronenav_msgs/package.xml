@@ -11,6 +11,11 @@
   <author email="amartinezacosta@miners.utep.edu">Alejandro Martinez Acosta</author> -->
 
   <build_depend>message_generation</build_depend>
+  <build_depend>actionlib_msgs</build_depend>
+  
   <exec_depend> message_runtime </exec_depend>
+  <exec_depend>message_generation</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
+
   <buildtool_depend>catkin</buildtool_depend>
 </package>

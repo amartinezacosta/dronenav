@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   cv_bridge
   image_transport
+  actionlib
   sensor_msgs
   std_msgs
   dronenav_msgs
@@ -213,25 +214,11 @@ target_link_libraries(video_saver_node
 #############
 
 if(CATKIN_ENABLE_TESTING)
-  add_rostest_gtest(dronenav_image_action_test
-    test/dronenav_image_action.test
-    test/dronenav_image_action_test.cpp
-    src/image_saver.cpp
+  add_rostest_gtest(dronenav_actions_tests
+    test/dronenav_actions_tests.test
+    test/dronenav_actions_tests.cpp
   )
-
-  add_rostest_gtest(dronenav_video_action_test
-    test/dronenav_video_action.test
-    test/dronenav_video_action_test.cpp
-    src/video_saver.cpp
-  )
-
-  target_link_libraries(dronenav_image_action_test 
+  target_link_libraries(dronenav_actions_tests 
     ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-  )
-
-  target_link_libraries(dronenav_video_action_test 
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
   )
 endif()

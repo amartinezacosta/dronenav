@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 
   /*Image saver*/
   dronenav_actions::ImageSaver saver(nh, pvt_nh);
-
   ros::spin();
+  
   return 0;
 }

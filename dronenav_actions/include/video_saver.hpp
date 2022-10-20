@@ -3,14 +3,15 @@
 
 #include <ros/ros.h>
 
+#include <actionlib/server/simple_action_server.h>
+#include <dronenav_msgs/SaveVideoAction.h>
+
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <dronenav_msgs/VideoSave.h>
 
 namespace dronenav_actions
 {
@@ -22,24 +23,26 @@ namespace dronenav_actions
 
     private:
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
-    bool video_save_service(dronenav_msgs::VideoSaveRequest& rqt,
-      dronenav_msgs::VideoSaveResponse& rsp);
+    void action_callback(const dronenav_msgs::SaveVideoGoalConstPtr& goal);
 
     private:
     ros::NodeHandle m_nh;
     ros::NodeHandle m_pvt_nh;
 
-    /*Service server*/
-    ros::ServiceServer m_video_save_service;
+    /*Action server*/
+    actionlib::SimpleActionServer<
+      dronenav_msgs::SaveVideoAction> m_action_server;
 
     /*Subscribers*/
     image_transport::Subscriber m_image_sub;
 
     /*Variables*/
-    double m_start, m_end;
-    std::string m_video_name;
-    cv::VideoWriter m_video_writer;
-    std::vector<cv::Mat> m_frames;
+    bool m_store_frame;
+    double m_start;
+    //cv::VideoWriter m_video_writer;
+    cv::Mat m_frame;
+    dronenav_msgs::SaveVideoFeedback m_feedback;
+    dronenav_msgs::SaveVideoResult m_result; 
 
     /*Parameters*/
     std::string m_image_topic;

@@ -5,21 +5,19 @@
 #include <gtest/gtest.h>
 
 #include <image_saver.hpp>
-#include <video_saver.hpp>
 
-#include <dronenav_msgs/ImageSave.h>
-#include <dronenav_msgs/PointCloudSave.h>
-#include <dronenav_msgs/VideoSave.h>
+#include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/terminal_state.h>
+
+#include <dronenav_msgs/SaveImageAction.h>
+#include <dronenav_msgs/SavePointCloudAction.h>
+#include <dronenav_msgs/SaveVideoAction.h>
 
 class DronenavTestFixture : public ::testing::Test
 {
   public:
   void SetUp()
   {
-    /*Service clients*/
-    image_save_client = nh.serviceClient<dronenav_msgs::ImageSave>("dronenav/save/image");
-    video_save_client = nh.serviceClient<dronenav_msgs::VideoSave>("dronenav/save/video");
-    
     /*Subscribers*/
 
     /*Publishers*/
@@ -31,11 +29,6 @@ class DronenavTestFixture : public ::testing::Test
   }
 
   ros::NodeHandle nh;
-  ros::NodeHandle pvt_nh;
-
-  /*Service clients*/
-  ros::ServiceClient image_save_client;
-  ros::ServiceClient video_save_client;
 
   /*Subscribers*/
 

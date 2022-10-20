@@ -1,0 +1,10 @@
+#goal definition
+uint32 count
+string file_name
+float64 delay
+---
+#result
+uint32 count
+---
+#feedback
+uint32 count

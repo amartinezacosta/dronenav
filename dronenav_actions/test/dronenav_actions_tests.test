@@ -9,7 +9,7 @@
   <arg name="Y" default="0.0" />
   <arg name="est" default="ekf2" />
   <arg name="vehicle" default="iris_depth_camera" />
-  <arg name="world" default="$(find px4)/Tools/sitl_gazebo/worlds/empty.world" />
+  <arg name="world" default="$(find dronenav)/worlds/dronenav_actions_test.world" />
   <arg name="sdf" default="$(find px4)/Tools/sitl_gazebo/models/$(arg vehicle)/$(arg vehicle).sdf" />
 
   <arg name="gui" default="true" />
@@ -59,8 +59,25 @@
     <param name="cruise_speed" value="1.0"/>
   </node>
 
-  <!--Test node -->
-  <test test-name="dronenav_actions_test" pkg="dronenav_actions" type="dronenav_video_action_test">
+  <!-- dronenav save image action server -->
+  <node pkg="dronenav_actions" type="image_saver_node" 
+    name="image_saver_node" output="screen">
     <param name="image_topic" type="string" value="camera/rgb/image_raw"/>
-  </test>
+  </node>
+
+  <!-- dronenav save pointcloud action server-->
+  <node pkg="dronenav_actions" type="pointcloud_saver_node"
+    name="pointcloud_saver_node" output="screen">
+    <param name="pointcloud_topic" type="string" value="camera/depth/points"/>
+  </node>
+
+  <!-- dronenav save video action server-->
+  <node pkg="dronenav_actions" type="video_saver_node"
+    name="video_saver_node" output="screen">
+    <param name="image_topic" type="string" value="camera/rgb/image_raw"/>
+  </node>
+
+  <!--Test node -->
+  <test test-name="dronenav_actions_test" 
+    pkg="dronenav_actions" type="dronenav_actions_tests"/>
 </launch>

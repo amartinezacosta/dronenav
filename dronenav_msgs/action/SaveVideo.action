@@ -1,0 +1,10 @@
+# Goal
+float32 duration
+string file_name
+---
+#Result
+float32 duration
+---
+#Feedback
+uint32 frame_count
+float32 time
