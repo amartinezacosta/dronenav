@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!-- Launch file to test the dronenav node using PX4 SITL and Gazebo -->
+<launch>
+  <!-- Simulation arguments-->
+  <arg name="x" default="4.0" />
+  <arg name="y" default="0.0" />
+  <arg name="z" default="0.0" />
+  <arg name="R" default="0.0" />
+  <arg name="P" default="0.0" />
+  <arg name="Y" default="0.0" />
+  <arg name="est" default="ekf2" />
+  <arg name="vehicle" default="iris_depth_camera" />
+  <arg name="world" default="$(find dronenav)/worlds/nfac_section_1.world" />
+  <arg name="sdf" default="$(find px4)/Tools/sitl_gazebo/models/$(arg vehicle)/$(arg vehicle).sdf" />
+
+  <arg name="gui" default="true" />
+  <arg name="debug" default="false" />
+  <arg name="verbose" default="false" />
+  <arg name="paused" default="false" />
+  <arg name="respawn_gazebo" default="false" />
+  <arg name="fcu_url" default="udp://:14540@localhost:14557" />
+  <arg name="respawn_mavros" default="false" />
+  <arg name="interactive" default="true" />
+
+  <!-- PX4 SITL and Gazebo Simulation-->
+  <include file="$(find px4)/launch/posix_sitl.launch">
+      <arg name="x" value="$(arg x)" />
+      <arg name="y" value="$(arg y)" />
+      <arg name="z" value="$(arg z)" />
+      <arg name="R" value="$(arg R)" />
+      <arg name="P" value="$(arg P)" />
+      <arg name="Y" value="$(arg Y)" />
+      <arg name="world" value="$(arg world)" />
+      <arg name="vehicle" value="iris" />
+      <arg name="sdf" value="$(arg sdf)" />
+      <arg name="gui" value="$(arg gui)" />
+      <arg name="interactive" value="$(arg interactive)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="verbose" value="$(arg verbose)" />
+      <arg name="paused" value="$(arg paused)" />
+      <arg name="respawn_gazebo" value="$(arg respawn_gazebo)" />
+  </include>
+
+  <!-- mavros node -->
+  <include file="$(find mavros)/launch/px4.launch">
+      <arg name="gcs_url" value="" />
+      <arg name="fcu_url" value="$(arg fcu_url)" />
+      <arg name="respawn_mavros" value="$(arg respawn_mavros)" />
+  </include>
+
+  <!-- dronenav node -->
+  <!-- <node pkg="dronenav" type="dronenav_node" name="dronenav" output="screen">
+    <param name="connect_tries" type="int" value="10"/>
+    <param name="arm_tries" type="int" value="10"/>
+    <param name="offboard_mode_tries" type="int" value="10"/>
+    <param name="reach_radius_sqr" value="0.1"/>
+    <param name="yaw_min_error" value="0.1"/>
+    <param name="waypoint_timeout" value="30.0"/>
+    <param name="moving_tick_resolution" value="0.01"/>
+    <param name="cruise_speed" value="1.0"/>
+  </node> -->
+
+  <!-- Octomap mapping server -->
+
+  <!-- Camera static transformation -->
+  <node pkg="tf" type="static_transform_publisher" name="tf_camera_baseLink"
+    args="0.1 0.0 0.0 -1.57 0 -1.57 base_link camera_link 30"/>
+
+  <!-- Octomap server node -->
+  <remap from="/cloud_in" to="/camera/depth/points" />
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+    <param name="frame_id" type="string" value="map" />
+    <param name="base_frame_id" type="string" value="camera_link"/>
+    <param name="resolution" value="0.2" />
+    <param name="sensor_model/max_range" value="5.0" />
+  </node> 
+
+  <!-- Octomap saver node -->
+  <node pkg="octomap_server" type="octomap_saver" name="octomap_saver"
+    args="-f $(find global_planner)/octomaps/nfac_section_1.bt" respawn="true"
+    respawn_delay="60" /> 
+
+  <!-- rviz node -->
+  <node pkg="rviz" type="rviz" name="rviz"/>
+
+</launch>
