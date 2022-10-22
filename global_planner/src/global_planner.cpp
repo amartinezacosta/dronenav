@@ -73,7 +73,7 @@ namespace global_planner
         process_event(EvGoalReceived());
     }
 
-    bool GlobalPlanner::find_global_path(void)
+    bool GlobalPlanner::find_global_path(dronenav_msgs::GlobalGoal& goal)
     {
         if(m_tree == nullptr) 
         {
@@ -88,18 +88,19 @@ namespace global_planner
 
         std::vector<AStarVertex> vertices; 
         //Step 1. Find vertices within bounding box
-        update_vertices(m_current_goal, vertices);
+        update_vertices(goal, vertices);
         //Step 2. Find edges between vertices
         update_edges(vertices);
         //Step 3. Find path
-        bool found = find_path(m_current_goal.priority, vertices);
+        bool found = find_path(goal.priority, vertices);
 
         end = ros::WallTime::now();
         double execution_time = (end - start).toNSec() * 1e-6;
         ROS_INFO_NAMED("global_planner", "Path planned execution time (ms): %f", execution_time);
 
         /*Fill out status message and publish it*/
-        m_status.goal = m_current_goal;
+        m_status.goal = goal;
+        m_status.start = m_start;
         m_status.vertices_count = vertices.size();
         m_status.edges_count = vertices.size() * m_neighbor_max_count;
         m_status.path_found = found;

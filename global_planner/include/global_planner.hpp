@@ -40,7 +40,10 @@ namespace global_planner
         dronenav_msgs::GlobalGoal& get_current_goal(void){ return m_current_goal; }
         dronenav_msgs::GlobalGoal& get_new_goal(void){ return m_new_goal; }
 
-        bool find_global_path(void);
+        /*This sould only be used for testing*/
+        void set_start(geometry_msgs::Point& position){ m_start = position; }
+
+        bool find_global_path(dronenav_msgs::GlobalGoal& goal);
         ros::NodeHandle& get_node_handle(void) {return m_nh; }
         void send_path(void)
         {

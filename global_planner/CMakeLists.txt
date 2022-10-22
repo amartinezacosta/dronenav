@@ -223,9 +223,9 @@ if(CATKIN_ENABLE_TESTING)
   )
 
   target_link_libraries(global_planner_random_goals 
-    #${PROJECT_NAME}
+    ${PROJECT_NAME}
     ${catkin_LIBRARIES}
-    #${OCTOMAP_LIBRARIES}
+    ${OCTOMAP_LIBRARIES}
     #${Boost_LIBRARIES}
   )
 endif()

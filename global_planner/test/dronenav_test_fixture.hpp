@@ -11,6 +11,8 @@
 #include <dronenav_msgs/GlobalGoal.h>
 #include <dronenav_msgs/PlannerStatus.h>
 
+#include <global_planner.hpp>
+
 #define GOAL_SAMPLE_COUNT 100
 
 class DronenavTestFixture : public ::testing::Test
