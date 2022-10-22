@@ -39,8 +39,6 @@ namespace global_planner
         dronenav_msgs::Path& get_current_path(void){ return m_current_path; }
         dronenav_msgs::GlobalGoal& get_current_goal(void){ return m_current_goal; }
         dronenav_msgs::GlobalGoal& get_new_goal(void){ return m_new_goal; }
-        void set_path_found(bool result) { m_path_found = result; }
-        bool get_path_found(void) { return m_path_found; }
 
         bool find_global_path(void);
         ros::NodeHandle& get_node_handle(void) {return m_nh; }
@@ -68,7 +66,7 @@ namespace global_planner
         void goal_callback(const dronenav_msgs::GlobalGoal::ConstPtr& msg);
         void rviz_goal_callback(const geometry_msgs::PointStamped::ConstPtr &msg);
         void path_done_callback(const std_msgs::Empty::ConstPtr& msg);
-        void status_tick_callback(const ros::TimerEvent& evt);
+        // void status_tick_callback(const ros::TimerEvent& evt);
 
         void draw_vertices(std::vector<AStarVertex>& vertices);
         void draw_edges(std::vector<AStarVertex>& vertices);
@@ -100,8 +98,9 @@ namespace global_planner
         dronenav_msgs::GlobalGoal m_new_goal;
         dronenav_msgs::Path m_current_path;
         std::deque<dronenav_msgs::GlobalGoal> m_goal_queue;
-        ros::Timer m_status_timer;
-        bool m_path_found;
+        dronenav_msgs::PlannerStatus m_status;
+        //ros::Timer m_status_timer;
+        //bool m_path_found;
 
         octomap::OcTree *m_tree;
 

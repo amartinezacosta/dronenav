@@ -11,12 +11,11 @@ namespace global_planner
 
     if(context<GlobalPlanner>().find_global_path())
     {
-      context<GlobalPlanner>().set_path_found(true);
       post_event(EvPathFound());
     }
     else
     {
-      context<GlobalPlanner>().set_path_found(false);
+      // context<GlobalPlanner>().set_path_found(false);
       dronenav_msgs::GlobalGoal& goal = context<GlobalPlanner>().get_current_goal();
 
       ROS_WARN_NAMED("global_planner", "No path to x=%f, y=%f, z=%f was found",

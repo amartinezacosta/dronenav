@@ -139,14 +139,7 @@ add_library(${PROJECT_NAME}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node 
-  src/main.cpp
-  # src/global_planner.cpp
-  # src/interrupt.cpp
-  # src/planning.cpp
-  # src/sending.cpp
-  # src/waiting.cpp
-  )
+add_executable(${PROJECT_NAME}_node src/main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -216,10 +209,23 @@ if(CATKIN_ENABLE_TESTING)
     test/global_planner.test
     test/global_planner_test.cpp
   )
+
+  add_rostest_gtest(global_planner_random_goals
+    test/global_planner_random_goals.test
+    test/global_planner_random_goals.cpp
+  )
+
   target_link_libraries(global_planner_test 
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${OCTOMAP_LIBRARIES}
     ${Boost_LIBRARIES}
+  )
+
+  target_link_libraries(global_planner_random_goals 
+    #${PROJECT_NAME}
+    ${catkin_LIBRARIES}
+    #${OCTOMAP_LIBRARIES}
+    #${Boost_LIBRARIES}
   )
 endif()

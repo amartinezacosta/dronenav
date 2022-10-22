@@ -19,6 +19,8 @@ namespace global_planner
 
     boost::statechart::result react(const EvPathDone& ev);
 
+    typedef boost::statechart::custom_reaction<EvPathDone> reactions;
+
     private:
     void reached_callback(const dronenav_msgs::Waypoint::ConstPtr& msg);
 

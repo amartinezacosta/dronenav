@@ -34,7 +34,7 @@ namespace dronenav
     m_target_pose_pub = m_nh.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);
     //_target_pose_pub = _nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
     m_drone_status_pub = m_nh.advertise<dronenav_msgs::Status>("dronenav/status", 30);
-    m_waypoint_reached = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint_reached", 50);
+    m_waypoint_reached = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint/reached", 50);
 
     //Service clients
     m_arm_client = m_nh.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");

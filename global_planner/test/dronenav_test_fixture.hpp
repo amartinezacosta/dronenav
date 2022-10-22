@@ -9,6 +9,9 @@
 #include <dronenav_msgs/Waypoint.h>
 #include <dronenav_msgs/Status.h>
 #include <dronenav_msgs/GlobalGoal.h>
+#include <dronenav_msgs/PlannerStatus.h>
+
+#define GOAL_SAMPLE_COUNT 100
 
 class DronenavTestFixture : public ::testing::Test
 {
@@ -22,10 +25,16 @@ class DronenavTestFixture : public ::testing::Test
     /*Subscribers*/
     status_sub = nh.subscribe<dronenav_msgs::Status>("dronenav/status", 50, 
       &DronenavTestFixture::status_callback, this);
+    global_planner_status_sub = nh.subscribe<dronenav_msgs::PlannerStatus>(
+      "dronenav/global_planner/status", 50,
+      &DronenavTestFixture::global_planner_status_callback, this);
 
     /*Publishers*/
     global_goal_pub = nh.advertise<dronenav_msgs::GlobalGoal>("dronenav/global_planner/goal", 10);
     waypoint_pub = nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint", 100);
+  
+    /*Seed random generator*/
+    srand(time(0));
   }
 
   void TearDown()
@@ -38,6 +47,11 @@ class DronenavTestFixture : public ::testing::Test
     status = *msg;
   }
 
+  void global_planner_status_callback(const dronenav_msgs::PlannerStatusConstPtr& msg)
+  {
+    global_planner_status = *msg;
+  }
+
   void wait_for_state(const std::string state, double time)
   {
     double t0 = ros::Time::now().toSec();
@@ -45,6 +59,10 @@ class DronenavTestFixture : public ::testing::Test
       ((ros::Time::now().toSec() - t0) < time));
   }
 
+  double random_coordinate(double min, double max)
+  {
+      return min + (rand() / (RAND_MAX / (max - min)));
+  }
   ros::NodeHandle nh;
 
   /*Service clients*/
@@ -53,6 +71,7 @@ class DronenavTestFixture : public ::testing::Test
 
   /*Subscribers*/
   ros::Subscriber status_sub;
+  ros::Subscriber global_planner_status_sub;
 
   /*Publisher*/
   ros::Publisher waypoint_pub;
@@ -60,6 +79,7 @@ class DronenavTestFixture : public ::testing::Test
 
   /*Variables*/
   dronenav_msgs::Status status;
+  dronenav_msgs::PlannerStatus global_planner_status;
 };
 
 #endif

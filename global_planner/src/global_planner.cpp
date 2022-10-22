@@ -34,11 +34,11 @@ namespace global_planner
         //Publishers
         m_path_planner_status_pub = m_nh.advertise<dronenav_msgs::PlannerStatus>("dronenav/global_planner/status", 50);
         m_graph_marker_pub = m_nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
-        m_waypoint_pub = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoints", 100);
+        m_waypoint_pub = m_nh.advertise<dronenav_msgs::Waypoint>("dronenav/waypoint", 100);
 
         //Status timer
-        m_status_timer = m_nh.createTimer(ros::Duration(0.1), 
-            &GlobalPlanner::status_tick_callback, this);
+        // m_status_timer = m_nh.createTimer(ros::Duration(0.1), 
+        //     &GlobalPlanner::status_tick_callback, this);
     }
 
     void GlobalPlanner::rviz_goal_callback(const geometry_msgs::PointStamped::ConstPtr& msg)
@@ -73,15 +73,6 @@ namespace global_planner
         process_event(EvGoalReceived());
     }
 
-    void GlobalPlanner::status_tick_callback(const ros::TimerEvent& evt)
-    {
-        dronenav_msgs::PlannerStatus status;
-        status.queue_size = m_goal_queue.size();
-        status.path_found = m_path_found;
-
-        m_path_planner_status_pub.publish(status);
-    }
-
     bool GlobalPlanner::find_global_path(void)
     {
         if(m_tree == nullptr) 
@@ -106,6 +97,16 @@ namespace global_planner
         end = ros::WallTime::now();
         double execution_time = (end - start).toNSec() * 1e-6;
         ROS_INFO_NAMED("global_planner", "Path planned execution time (ms): %f", execution_time);
+
+        /*Fill out status message and publish it*/
+        m_status.goal = m_current_goal;
+        m_status.vertices_count = vertices.size();
+        m_status.edges_count = vertices.size() * m_neighbor_max_count;
+        m_status.path_found = found;
+        m_status.latency = execution_time;
+        m_status.queue_size = m_goal_queue.size();
+
+        m_path_planner_status_pub.publish(m_status);
 
         return found;
     }
@@ -355,6 +356,7 @@ namespace global_planner
 
         //Signal waypoint queue flush
         m_current_path.waypoints.front().flags = dronenav_msgs::Waypoint::FLUSH_QUEUE;
+
         //Last waypoint contains the target yaw of the drone
         m_current_path.waypoints.back().yaw = m_current_goal.yaw;
 
