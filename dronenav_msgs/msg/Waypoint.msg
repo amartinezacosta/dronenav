@@ -12,4 +12,5 @@ uint8 FLUSH_QUEUE = 2
 uint8 action
 uint8 flags
 geometry_msgs/Point position
+geometry_msgs/Point normal
 float64 yaw
