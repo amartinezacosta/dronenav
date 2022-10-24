@@ -22,6 +22,9 @@ TEST_F(DronenavTestFixture, waypoint_back_wall)
     end = ros::WallTime::now();
     double execution_time = (end - start).toNSec() * 1e-6;
 
+    std::cout << "nfac_wall_waypoint_" << i << " time = " << execution_time 
+      << " count = " << waypoints[i].size() << std::endl; 
+
     /*Write results to a file*/
     std::stringstream file_name;
     file_name << "nfac_wall_waypoints_" << i << ".csv";

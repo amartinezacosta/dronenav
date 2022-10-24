@@ -1,0 +1,6 @@
+geometry_msgs/Point min
+geometry_msgs/Point max
+geometry_msgs/Point viewport
+uint32 downsample
+---
+Waypoint[] waypoints

@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!-- Launch file to test the dronenav node using PX4 SITL and Gazebo -->
 <launch>
   <!-- Simulation arguments-->
   <arg name="x" default="0.0" />

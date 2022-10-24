@@ -254,14 +254,68 @@ namespace dronenav
 
   void Drone::save_image(void)
   {
-    std_srvs::Empty srv;
-    m_image_save_client.call(srv);
+    actionlib::SimpleActionClient<
+      dronenav_msgs::SaveImageAction> action_client("dronenav/save_image", true);
+    
+    /*Wait for server to start*/
+    action_client.waitForServer();
+
+    /*Send goal*/
+    dronenav_msgs::SaveImageGoal goal;
+    std::stringstream file_name;
+    file_name << "dronenav_image_" << ros::Time::now().toSec(); 
+
+    goal.file_name = file_name.str();
+    goal.count = 1;
+    goal.delay = 0.0;
+    action_client.sendGoal(goal);
+
+    bool timeout = action_client.waitForResult(ros::Duration(5.0));
+    if(timeout)
+    {
+      actionlib::SimpleClientGoalState state = action_client.getState();
+      ROS_INFO_NAMED("dronenav", "Image action state = %s", state.toString().c_str());
+
+      dronenav_msgs::SaveImageResultConstPtr result = action_client.getResult();
+      ROS_INFO_NAMED("dronenav", "Image action result count = %i", result->count);
+    }
+    else
+    {
+      ROS_WARN_NAMED("dronenav", "Image action timeout");
+    }
   }
 
   void Drone::save_pointcloud(void)
   {
-    // dronenav_msgs::PointCloudSave srv;
-    // m_pointcloud_save_client.call(srv);
+    actionlib::SimpleActionClient<
+      dronenav_msgs::SavePointCloudAction> action_client("dronenav/save_pointcloud", true);
+    
+    /*Wait for server to start*/
+    action_client.waitForServer();
+
+    /*Send goal*/
+    dronenav_msgs::SavePointCloudGoal goal;
+    std::stringstream file_name;
+    file_name << "dronenav_pointcloud_" << ros::Time::now().toSec(); 
+
+    goal.file_name = file_name.str();
+    goal.count = 1;
+    goal.delay = 0.0;
+    action_client.sendGoal(goal);
+
+    bool timeout = action_client.waitForResult(ros::Duration(5.0));
+    if(timeout)
+    {
+      actionlib::SimpleClientGoalState state = action_client.getState();
+      ROS_INFO_NAMED("dronenav", "Pointcloud action state = %s", state.toString().c_str());
+
+      dronenav_msgs::SavePointCloudResultConstPtr result = action_client.getResult();
+      ROS_INFO_NAMED("dronenav", "Pointcloud action result count = %i", result->count);
+    }
+    else
+    {
+      ROS_WARN_NAMED("dronenav", "Pointcloud action timeout");
+    }
   }
 
   void Drone::enqueue(dronenav_msgs::Waypoint waypoint)

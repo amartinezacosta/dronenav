@@ -21,9 +21,33 @@ namespace waypoint_generation
       m_octomap_sub = m_nh.subscribe("octomap_full", 10, 
           &WaypointGenerator::octomap_callback, this);
 
+      //Service Servers
+      m_waypoint_generation_server = m_nh.advertiseService(
+        "dronenav/waypoint_generation/generate", 
+        &WaypointGenerator::generate_waypoints_service_callback, this);
+
       //Publishers
       m_marker_pub = m_nh.advertise<
         visualization_msgs::Marker>("visualization_marker", 0);
+  }
+
+  bool WaypointGenerator::generate_waypoints_service_callback(
+    dronenav_msgs::GenerateWaypointsRequest& rqt,
+    dronenav_msgs::GenerateWaypointsResponse& rsp)
+  {
+    ROS_INFO_NAMED("waypoint_generation", "Waypoint generation service called");
+
+    std::vector<dronenav_msgs::Waypoint> waypoints;
+    generate_waypoints(waypoints, 
+      rqt.min, 
+      rqt.max, 
+      rqt.viewport,
+      rqt.downsample);
+
+    ROS_INFO_NAMED("waypoint_generation", "Waypoints found = %li", waypoints.size());
+
+    rsp.waypoints = waypoints;
+    return true;
   }
 
   void WaypointGenerator::generate_waypoints(
@@ -74,7 +98,8 @@ namespace waypoint_generation
 
             if(dot > 0.9)
             {
-              /*Create a new waypoint*/
+              /*Dot product is parallel to the viewport,
+              create a new waypoint*/
               dronenav_msgs::Waypoint waypoint;
               waypoint.position.x = x;
               waypoint.position.y = y;
@@ -84,8 +109,9 @@ namespace waypoint_generation
               waypoint.normal.y = normal.y();
               waypoint.normal.z = normal.z();
 
-              waypoint.yaw = octomap_viewport.angleTo(normal);
-              waypoint.action = 0;
+              waypoint.yaw = octomap_viewport.angleTo(-normal);
+              waypoint.action = dronenav_msgs::Waypoint::WAYPOINT_ACTION_IMAGE |
+                                dronenav_msgs::Waypoint::WAYPOINT_ACTION_POINTCLOUD;
               waypoint.flags = 0;
 
               waypoints.push_back(waypoint);
@@ -95,10 +121,25 @@ namespace waypoint_generation
       }
     }
 
+    /*Visualize waypoints if requested*/
     if(m_draw_normals) draw_normals(waypoints);
     if(m_draw_waypoints) draw_waypoints(waypoints);
 
-    /*Publish waypoints*/
+    /*Set correct waypoint position*/
+    for(dronenav_msgs::Waypoint& waypoint : waypoints)
+    {
+      double x = waypoint.position.x;
+      double y = waypoint.position.y;
+      double z = waypoint.position.z;
+
+      double nx = waypoint.normal.x;
+      double ny = waypoint.normal.y;
+      double nz = waypoint.normal.z;
+
+      waypoint.position.x = x + m_standoff_multiplier*nx;
+      waypoint.position.y = y + m_standoff_multiplier*ny;
+      waypoint.position.z = z + m_standoff_multiplier*nz;
+    }
   }
 
   void WaypointGenerator::draw_normals(

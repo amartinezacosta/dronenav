@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 
-//#include <dronenav/WaypointGenerate.h>
+#include <dronenav_msgs/GenerateWaypoints.h>
 #include <dronenav_msgs/GlobalGoal.h>
 #include <dronenav_msgs/Waypoint.h>
 
@@ -14,14 +14,6 @@
 
 namespace waypoint_generation
 {
-  enum WaypointRegion
-  {
-    X_POSITIVE,
-    X_NEGATIVE,
-    Y_POSITIVE,
-    Y_NEGATIVE
-  };
-
   class WaypointGenerator
   {
     public:
@@ -42,7 +34,11 @@ namespace waypoint_generation
       m_tree = dynamic_cast<octomap::OcTree*>(octree);
     }
 
-    void publish_waypoints(void);
+    bool generate_waypoints_service_callback(
+      dronenav_msgs::GenerateWaypointsRequest& rqt,
+      dronenav_msgs::GenerateWaypointsResponse& rsp);
+
+    //void publish_waypoints(void);
 
     void draw_normals(std::vector<dronenav_msgs::Waypoint>& waypoints);
     void draw_waypoints(std::vector<dronenav_msgs::Waypoint>& waypoints);
@@ -60,7 +56,7 @@ namespace waypoint_generation
     ros::Publisher m_marker_pub;
 
     //Service servers
-    ros::ServiceServer m_waypoint_generator_server;
+    ros::ServiceServer m_waypoint_generation_server;
 
     //Other
     octomap::OcTree *m_tree;

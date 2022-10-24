@@ -12,12 +12,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   dronenav_msgs
+  actionlib
   rostest
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost 1.40)
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -108,6 +108,7 @@ catkin_package(
  INCLUDE_DIRS include
  CATKIN_DEPENDS
  rostest
+ actionlib
 )
 
 ###########
@@ -160,9 +161,9 @@ add_executable(${PROJECT_NAME}_node  src/main.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
 )
 
 #############
@@ -216,10 +217,10 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(dronenav_test
     test/dronenav.test
     test/dronenav_test.cpp)
-  target_link_libraries(dronenav_test 
-    ${catkin_LIBRARIES} 
+  target_link_libraries(dronenav_test  
     ${Boost_LIBRARIES}
-    ${PROJECT_NAME})
+    ${PROJECT_NAME}
+    ${catkin_LIBRARIES})
 endif()
 
 ## Add folders to be run by python nosetests

@@ -3,9 +3,13 @@
 
 #include <ros/ros.h>
 
-#include <dronenav_msgs/Waypoint.h>
-#include <dronenav_msgs/Path.h>
-// #include <dronenav_msgs/PathGoal.h>
+#include <actionlib/client/simple_action_client.h>
+#include <actionlib/client/terminal_state.h>
+
+#include <dronenav_msgs/SaveImageAction.h>
+#include <dronenav_msgs/SavePointCloudAction.h>
+#include <dronenav_msgs/SaveVideoAction.h>
+
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -19,10 +23,11 @@
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 
+#include <dronenav_msgs/Waypoint.h>
+#include <dronenav_msgs/Path.h>
 #include <dronenav_msgs/Takeoff.h>
 #include <dronenav_msgs/Land.h>
 #include <dronenav_msgs/Status.h>
-//#include <dronenav_msgs/PointCloudSave.h>
 
 #include <boost/thread/thread.hpp>
 #include <boost/chrono.hpp>
