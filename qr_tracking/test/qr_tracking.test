@@ -63,12 +63,16 @@
   </node>
 
   <!--rviz-->
-  <!-- <node pkg="rviz" type="rviz" name="rviz" 
-    args="-d $(find qr_tracking)/rviz/qr_tracking.rviz"/> -->
+  <node pkg="rviz" type="rviz" name="rviz" 
+    args="-d $(find qr_tracking)/rviz/qr_tracking.rviz"/>
+
+    <!-- rosbag -->
+  <node pkg="rosbag" type="record" name="qr_tracking_test" 
+    args="/dronenav/qr_tracker/tracked" /> 
 
   <!--Test node -->
   <test test-name="qr_tracking_test" pkg="qr_tracking" type="qr_tracking_test"
-    required="true" time-limit="300.0">
+    required="true" time-limit="1200.0">
     <param name="image_topic" type="string" value="camera/rgb/image_raw"/>
     <param name="show_detections" type="bool" value="true" />
   </test>

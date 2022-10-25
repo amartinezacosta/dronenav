@@ -54,7 +54,7 @@ namespace qr_tracking
     }
 
     /*Detection*/
-    std::vector<Code> current_detections;
+    std::vector<dronenav_msgs::Code> current_detections;
     detect_codes(cv_ptr, current_detections);
   
     /*Transform point*/
@@ -67,7 +67,7 @@ namespace qr_tracking
   }
 
   void QRTracking::detect_codes(cv_bridge::CvImagePtr& cv_ptr, 
-    std::vector<Code>& detections)
+    std::vector<dronenav_msgs::Code>& detections)
   {
     cv::Mat image_gray;
     cv::cvtColor(cv_ptr->image, image_gray, cv::COLOR_BGR2GRAY);
@@ -80,24 +80,18 @@ namespace qr_tracking
       symbol != z_image.symbol_end(); ++symbol)
     {
       /*Code was detected, extract information*/
-      Code detected;
+      dronenav_msgs::Code detected;
       detected.type = symbol->get_type_name();
       detected.data = symbol->get_data();
 
       for(int i = 0; i < symbol->get_location_size(); i++)
       {
-        geometry_msgs::Point point;
-        point.x = symbol->get_location_x(i);
-        point.y = symbol->get_location_y(i);
-
-        detected.cx += point.x;
-        detected.cy += point.y;
-
-        detected.points.push_back(point);
+        detected.u.push_back(symbol->get_location_x(i));
+        detected.v.push_back(symbol->get_location_y(i));
       }
 
-      detected.cx /= detected.points.size();
-      detected.cy /= detected.points.size();
+      /*Resize corners vector*/
+      detected.corners.resize(detected.u.size());
 
       /*Save detection*/
       detections.push_back(detected);
@@ -106,59 +100,93 @@ namespace qr_tracking
     if(m_show_detections) { show_detections(cv_ptr, detections); }
   }
 
-  void QRTracking::transform_code_coordinates(std::vector<Code>& detections)
+  void QRTracking::transform_code_coordinates(
+    std::vector<dronenav_msgs::Code>& detections)
   {
-    /*For every detection*/
-    for(Code& detection : detections)
+    /*Get the current transformation between frames*/
+    geometry_msgs::TransformStamped transform;
+    try
     {
-      /*Find 3 dimensional coordinates from point cloud*/
-      int index = detection.cx+detection.cy*m_image_width;
-      if(index > (m_depth.points.size() - 1)) return;
-    
-      geometry_msgs::Vector3 v_in, v_out;
-      v_in.x = m_depth.points[index].x;
-      v_in.y = m_depth.points[index].y;
-      v_in.z = m_depth.points[index].z;
+      transform = m_tfBuffer.lookupTransform(m_frame_id,
+        m_base_frame_id, ros::Time(0));
+    }
+    catch(tf2::TransformException& ex)
+    {
+      ROS_WARN_ONCE_NAMED("qr_tracking", "Could not find a transform between %s and %s",
+        m_frame_id.c_str(), m_base_frame_id.c_str());
+      return;
+    }
 
-      /*Transform coordinates from camera to map frame*/
-      geometry_msgs::TransformStamped transform;
-      try
+    /*For every detection*/
+    for(dronenav_msgs::Code& detection : detections)
+    {
+      detection.position.x = 0.0f;
+      detection.position.y = 0.0f;
+      detection.position.z = 0.0f;
+
+      /*For every corner point*/
+      for(int i = 0; i < detection.u.size(); i++)
       {
-        transform = m_tfBuffer.lookupTransform(m_frame_id,
-          m_base_frame_id, ros::Time(0));
-      }
-      catch(tf2::TransformException& ex)
-      {
-        ROS_WARN_ONCE_NAMED("qr_tracking", "Could not find a transform between %s and %s",
-          m_frame_id.c_str(), m_base_frame_id.c_str());
-        continue;
+        uint32_t u = detection.u[i];
+        uint32_t v = detection.v[i];
+
+        int index = u + v*m_image_width;
+        if(index > (m_depth.points.size() - 1)) return;
+
+        geometry_msgs::Vector3 v_in;
+        v_in.x = m_depth.points[index].x;
+        v_in.y = m_depth.points[index].y;
+        v_in.z = m_depth.points[index].z;
+
+        /*Transform point*/
+        tf2::doTransform(v_in, detection.corners[i], transform);
+        detection.corners[i].x += transform.transform.translation.x;
+        detection.corners[i].y += transform.transform.translation.y;
+        detection.corners[i].z += transform.transform.translation.z;
+
+        detection.position.x += detection.corners[i].x;
+        detection.position.y += detection.corners[i].y;
+        detection.position.z += detection.corners[i].z;
       }
 
-      tf2::doTransform(v_in, v_out, transform);
-      detection.x = v_out.x + transform.transform.translation.x;
-      detection.y = v_out.y + transform.transform.translation.y;
-      detection.z = v_out.z + transform.transform.translation.z;
+      /*Get the center point of the detection*/
+      detection.position.x /= detection.corners.size();
+      detection.position.y /= detection.corners.size();
+      detection.position.z /= detection.corners.size();
     }
 
     /*Visualize in rviz*/
     if(m_show_detection_markers && !detections.empty())
     { 
-      show_detection_markers(detections);
+      show_detection_surfaces(detections);
     }
   }
 
-  void QRTracking::track_codes(std::vector<Code>& detections)
+  bool QRTracking::codes_equal(dronenav_msgs::Code& c1, 
+    dronenav_msgs::Code& c2)
+  {
+    double dx = c2.position.x - c1.position.x;
+    double dy = c2.position.y - c1.position.y;
+    double dz = c2.position.z - c1.position.z;
+  
+    double dl = dx*dx + dy*dy + dz*dz;
+
+    return ((dl < 10.0) ? true : false);
+  }
+
+  void QRTracking::track_codes(std::vector<dronenav_msgs::Code>& detections)
   {
     /*If the dictionary is empty, just add the codes and exit*/
     if(m_tracking_objects.empty())
     {
-      for(Code& current : detections)
+      for(dronenav_msgs::Code& current : detections)
       {
-        for(Code& previous : m_prev_detections)
+        for(dronenav_msgs::Code& previous : m_prev_detections)
         {
-          if(current == previous)
+          if(codes_equal(current, previous))
           {
-            m_tracking_objects[m_track_id++] = current;
+            current.id = m_track_id++;
+            m_tracking_objects[m_track_id] = current; 
           }
         }
       }      
@@ -167,21 +195,16 @@ namespace qr_tracking
     here*/
     else
     {
-      for(Code& detection : detections)
+      for(dronenav_msgs::Code& detection : detections)
       {
         int counter = 0;
 
         for(auto& track : m_tracking_objects)
         {
           /*If it is equal to any detection then ignore this match*/
-          if(track.second == detection)
+          if(!codes_equal(track.second, detection))
           {
             /*New object, add it to the dictionary*/
-            continue;
-          }
-          /*Else if it is not equal, then add a counter*/
-          else
-          {
             counter++;
           }
         }
@@ -195,146 +218,214 @@ namespace qr_tracking
           m_tracking_objects[m_track_id++] = detection;
         }
       }
-
-      /*Publish tracked markers markers*/
-      if(m_show_map_markers) show_map_markers();
     }
 
-    /*Publish code markers message*/
+    /*Show tracked codes if requested*/
+    if(m_show_map_markers) show_map_markers();
+
+    /*Publish tracked codes*/    
     publish_tracked_codes();
   }
 
   void QRTracking::publish_tracked_codes(void)
   {
-    dronenav_msgs::TrackedCodes tracked_codes;
-    for(auto& tracked : m_tracking_objects)
+    dronenav_msgs::TrackedCodes tracked;
+    for(auto& object : m_tracking_objects)
     {
-      dronenav_msgs::Code code;
-      //Id
-      code.id = tracked.first;
-
-      //3D real world coordinates
-      code.x = tracked.second.x;
-      code.y = tracked.second.y;
-      code.z = tracked.second.z;
-
-      //Pixel coordinates
-      code.cu = tracked.second.cx;
-      code.cv = tracked.second.cy;
-      for(geometry_msgs::Point point : tracked.second.points)
-      {
-        code.u.push_back(point.x);
-        code.v.push_back(point.z);
-      }
-
-      code.data = tracked.second.data;
-      code.type = tracked.second.type;
-      
-      tracked_codes.codes.push_back(code);
+      tracked.codes.push_back(object.second);
     }
 
-    m_tracked_codes_pub.publish(tracked_codes);
+    m_tracked_codes_pub.publish(tracked);
   }
 
   void QRTracking::show_detections(cv_bridge::CvImagePtr& cv_ptr, 
-    std::vector<Code>& detections)
+    std::vector<dronenav_msgs::Code>& detections)
   {
-    for(Code detection : detections)
+    for(dronenav_msgs::Code detection : detections)
     {
-      int n = detection.points.size() - 1;
-      cv::Point p1(detection.points[0].x, 
-                   detection.points[0].y);
+      int n = detection.u.size() - 1;
+      cv::Point p1(detection.u[0], 
+                   detection.v[0]);
 
-      cv::Point p2(detection.points[n].x,
-                   detection.points[n].y);
+      cv::Point p2(detection.u[n],
+                   detection.v[n]);
 
       cv::line(cv_ptr->image, p1, p2, cv::Scalar(0, 255, 0), 3);
 
-      for(int i = 0; i < detection.points.size() - 1; i++)
+      for(int i = 0; i < n; i++)
       {
-        cv::Point p1(detection.points[i].x, 
-                     detection.points[i].y);
+        cv::Point p1(detection.u[i], 
+                     detection.v[i]);
 
-        cv::Point p2(detection.points[i+1].x,
-                     detection.points[i+1].y);
+        cv::Point p2(detection.u[i+1],
+                     detection.v[i+1]);
 
         cv::line(cv_ptr->image, p1, p2, cv::Scalar(0, 255, 0), 3);
       }
 
-      cv::Point origin(detection.cx, detection.cy);
-      cv::Point text_origin(origin.x - 100, origin.y - 100);
-
-      cv::circle(cv_ptr->image, origin, 10, cv::Scalar(255, 0, 0), -1);
-      cv::putText(cv_ptr->image, detection.data, origin, cv::FONT_HERSHEY_SIMPLEX,
+      cv::putText(cv_ptr->image, detection.data, 
+        cv::Point(detection.u[0] - 10, detection.v[0] - 10), 
+        cv::FONT_HERSHEY_SIMPLEX,
         1.0, cv::Scalar(0, 255, 00), 1); 
     }
 
     m_image_pub.publish(cv_ptr->toImageMsg());
   }
 
-  void QRTracking::show_detection_markers(std::vector<Code>& detections)
+  void QRTracking::show_detection_surfaces(
+    std::vector<dronenav_msgs::Code>& detections)
   {
-      visualization_msgs::Marker marker;
-      marker.header.frame_id = "map";
-      marker.header.stamp = ros::Time();
-      marker.ns = "qr_tracking";
-      marker.id = 0;
-      marker.lifetime = ros::Duration(0.5);
-      marker.type = visualization_msgs::Marker::SPHERE_LIST;
-      marker.action = visualization_msgs::Marker::ADD;   
+    /*Surface detection rectangular marker*/
+    visualization_msgs::Marker surface;
+    surface.header.frame_id = "map";
+    surface.header.stamp = ros::Time();
+    surface.ns = "qr_tracking";
+    surface.id = 0;
+    surface.lifetime = ros::Duration(0.5);
+    surface.type = visualization_msgs::Marker::LINE_LIST;
+    surface.action = visualization_msgs::Marker::ADD;   
 
-      marker.pose.orientation.w = 1.0;
-      marker.scale.x = 0.1;
-      marker.scale.y = 0.1;
-      marker.scale.z = 0.1;
-      marker.color.a = 1.0;
-      marker.color.r = 1.0;
-      marker.color.g = 0.0;
-      marker.color.b = 0.0;
+    surface.pose.orientation.w = 1.0;
+    surface.scale.x = 0.1;
+    surface.scale.y = 0.1;
+    surface.scale.z = 0.1;
+    surface.color.a = 1.0;
+    surface.color.r = 1.0;
+    surface.color.g = 0.0;
+    surface.color.b = 0.0;
 
-    for(Code& detection : detections)
+    /*Center point of detection surface*/
+    visualization_msgs::Marker center;
+    center.header.frame_id = "map";
+    center.header.stamp = ros::Time();
+    center.ns = "qr_tracking";
+    center.id = 1;
+    center.lifetime = ros::Duration(0.5);
+    center.type = visualization_msgs::Marker::SPHERE_LIST;
+    center.action = visualization_msgs::Marker::ADD;   
+
+    center.pose.orientation.w = 1.0;
+    center.scale.x = 0.1;
+    center.scale.y = 0.1;
+    center.scale.z = 0.1;
+    center.color.a = 1.0;
+    center.color.r = 1.0;
+    center.color.g = 0.0;
+    center.color.b = 0.0;
+    
+    for(dronenav_msgs::Code& detection : detections)
     {
-      geometry_msgs::Point p;
-      p.x = detection.x;
-      p.y = detection.y;
-      p.z = detection.z;
+      /*First few lines*/
+      geometry_msgs::Point p1, p2;
+      for(int i = 0; i < detection.corners.size() - 1; i++)
+      {
+        p1.x = detection.corners[i].x;
+        p1.y = detection.corners[i].y;
+        p1.z = detection.corners[i].z;
       
-      marker.points.push_back(p);
-    }
+        p2.x = detection.corners[i+1].x;
+        p2.y = detection.corners[i+1].y;
+        p2.z = detection.corners[i+1].z;
 
-    m_marker_pub.publish(marker);
+        surface.points.push_back(p1);
+        surface.points.push_back(p2);
+      }
+
+      /*Line that closes the rectangle*/
+      p1.x = detection.corners.front().x;
+      p1.y = detection.corners.front().y;
+      p1.z = detection.corners.front().z;
+    
+      p2.x = detection.corners.back().x;
+      p2.y = detection.corners.back().y;
+      p2.z = detection.corners.back().z;
+
+      surface.points.push_back(p1);
+      surface.points.push_back(p2);
+
+      /*Center point*/
+      center.points.push_back(detection.position);
+    }    
+
+    m_marker_pub.publish(surface);
+    m_marker_pub.publish(center);
   }
 
   void QRTracking::show_map_markers(void)
   {
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "map";
-    marker.header.stamp = ros::Time();
-    marker.ns = "qr_tracking";
-    marker.id = 1;
-    marker.type = visualization_msgs::Marker::CUBE_LIST;
-    marker.action = visualization_msgs::Marker::ADD;   
+    visualization_msgs::Marker surface;
+    surface.header.frame_id = "map";
+    surface.header.stamp = ros::Time();
+    surface.ns = "qr_tracking";
+    surface.id = 2;
+    surface.type = visualization_msgs::Marker::LINE_LIST;
+    surface.action = visualization_msgs::Marker::ADD;   
 
-    marker.pose.orientation.w = 1.0;
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.5;
-    marker.scale.z = 0.5;
-    marker.color.a = 1.0;
-    marker.color.r = 0.0;
-    marker.color.g = 1.0;
-    marker.color.b = 0.0;
+    surface.pose.orientation.w = 1.0;
+    surface.scale.x = 0.1;
+    surface.scale.y = 0.1;
+    surface.scale.z = 0.1;
+    surface.color.a = 1.0;
+    surface.color.r = 1.0;
+    surface.color.g = 0.65;
+    surface.color.b = 0.0;
+
+    /*Center point of detection surface*/
+    visualization_msgs::Marker center;
+    center.header.frame_id = "map";
+    center.header.stamp = ros::Time();
+    center.ns = "qr_tracking";
+    center.id = 3;
+    center.type = visualization_msgs::Marker::SPHERE_LIST;
+    center.action = visualization_msgs::Marker::ADD;   
+
+    center.pose.orientation.w = 1.0;
+    center.scale.x = 0.1;
+    center.scale.y = 0.1;
+    center.scale.z = 0.1;
+    center.color.a = 1.0;
+    center.color.r = 1.0;
+    center.color.g = 0.65;
+    center.color.b = 0.0;
 
     for(auto& tracked : m_tracking_objects)
     {
-      geometry_msgs::Point p;
-      p.x = tracked.second.x;
-      p.y = tracked.second.y;
-      p.z = tracked.second.z;
+      dronenav_msgs::Code& detection = tracked.second;
 
-      marker.points.push_back(p);
-    }
+      /*First few lines*/
+      geometry_msgs::Point p1, p2;
+      for(int i = 0; i < detection.corners.size() - 1; i++)
+      {
+        p1.x = detection.corners[i].x;
+        p1.y = detection.corners[i].y;
+        p1.z = detection.corners[i].z;
+      
+        p2.x = detection.corners[i+1].x;
+        p2.y = detection.corners[i+1].y;
+        p2.z = detection.corners[i+1].z;
 
-    m_marker_pub.publish(marker);
+        surface.points.push_back(p1);
+        surface.points.push_back(p2);
+      }
+
+      /*Line that closes the rectangle*/
+      p1.x = detection.corners.front().x;
+      p1.y = detection.corners.front().y;
+      p1.z = detection.corners.front().z;
+    
+      p2.x = detection.corners.back().x;
+      p2.y = detection.corners.back().y;
+      p2.z = detection.corners.back().z;
+
+      surface.points.push_back(p1);
+      surface.points.push_back(p2);
+
+      /*Center point*/
+      center.points.push_back(detection.position);
+    }   
+
+    m_marker_pub.publish(surface);
+    m_marker_pub.publish(center);
   }
 }
 

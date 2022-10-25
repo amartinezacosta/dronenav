@@ -40,13 +40,16 @@ namespace qr_tracking
     private:
     void image_callback(const sensor_msgs::ImageConstPtr& msg);
     void detect_codes(cv_bridge::CvImagePtr& cv_ptr, 
-      std::vector<Code>& detections);
-    void transform_code_coordinates(std::vector<Code>& detections);
-    void track_codes(std::vector<Code>& detections);
+      std::vector<dronenav_msgs::Code>& detections);
+    void transform_code_coordinates(std::vector<dronenav_msgs::Code>& detections);
+    bool codes_equal(dronenav_msgs::Code& c1, 
+      dronenav_msgs::Code& c2);
+    void track_codes(std::vector<dronenav_msgs::Code>& detections);
     void publish_tracked_codes(void);
     void show_detections(cv_bridge::CvImagePtr& cv_ptr, 
-      std::vector<Code>& detections);
-    void show_detection_markers(std::vector<Code>& detections);
+      std::vector<dronenav_msgs::Code>& detections);
+    void show_detection_surfaces(
+      std::vector<dronenav_msgs::Code>& detections);
     void show_map_markers(void);
 
     void pointcloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -72,10 +75,10 @@ namespace qr_tracking
     sensor_msgs::PointCloud m_depth;
     tf2_ros::Buffer m_tfBuffer;
     tf2_ros::TransformListener *m_tfListener;
-    std::vector<Code> m_prev_detections;
+    std::vector<dronenav_msgs::Code> m_prev_detections;
     int m_frame_count;
     int m_track_id;
-    std::map<int, Code> m_tracking_objects;
+    std::map<int, dronenav_msgs::Code> m_tracking_objects;
 
     /*Parameters*/
     std::string m_image_topic;
