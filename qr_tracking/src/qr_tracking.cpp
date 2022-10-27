@@ -4,9 +4,7 @@ namespace qr_tracking
 {
   QRTracking::QRTracking(ros::NodeHandle nh, ros::NodeHandle pvt_nh) : 
     m_nh(nh),
-    m_pvt_nh(pvt_nh),
-    m_frame_count(0),
-    m_track_id(0)
+    m_pvt_nh(pvt_nh)
   {
     /*Parameters*/
     m_pvt_nh.param<std::string>("image_topic", m_image_topic, "camera/rgb/image_raw");
@@ -30,6 +28,11 @@ namespace qr_tracking
 
     /*zbar configuration*/
     m_scanner.set_config(zbar::ZBAR_NONE, zbar::ZBAR_CFG_ENABLE, 1);
+
+    /*Sort configure*/
+    m_sort.set_distance_threshold(0.1);
+    m_sort.set_hits_min_threshold(20);
+    m_sort.set_missed_max_threshold(20);
 
     /*TF2 listener*/
     m_tfListener = new tf2_ros::TransformListener(m_tfBuffer, m_nh);
@@ -60,10 +63,15 @@ namespace qr_tracking
     /*Transform point*/
     transform_code_coordinates(current_detections);
 
-    /*Tracking*/
-    track_codes(current_detections);
+    /*Track codes*/
+    m_tracking_objects.clear();
+    m_sort.update(current_detections, 
+        m_tracking_objects);
 
-    m_prev_detections = current_detections;
+    /*Publish tracked codes*/
+    publish_tracked_codes();
+    /*Show map markers*/
+    show_map_markers();
   }
 
   void QRTracking::detect_codes(cv_bridge::CvImagePtr& cv_ptr, 
@@ -174,65 +182,12 @@ namespace qr_tracking
     return ((dl < 10.0) ? true : false);
   }
 
-  void QRTracking::track_codes(std::vector<dronenav_msgs::Code>& detections)
-  {
-    /*If the dictionary is empty, just add the codes and exit*/
-    if(m_tracking_objects.empty())
-    {
-      for(dronenav_msgs::Code& current : detections)
-      {
-        for(dronenav_msgs::Code& previous : m_prev_detections)
-        {
-          if(codes_equal(current, previous))
-          {
-            current.id = m_track_id++;
-            m_tracking_objects[m_track_id] = current; 
-          }
-        }
-      }      
-    }
-    /*There is stuff on the dictionary, make sure that we are not repeating data
-    here*/
-    else
-    {
-      for(dronenav_msgs::Code& detection : detections)
-      {
-        int counter = 0;
-
-        for(auto& track : m_tracking_objects)
-        {
-          /*If it is equal to any detection then ignore this match*/
-          if(!codes_equal(track.second, detection))
-          {
-            /*New object, add it to the dictionary*/
-            counter++;
-          }
-        }
-
-        /*If this detection does not belong to any track on the list, 
-        then the counter should be equal to the number of tracked objects,
-        which means that this object does not belong to any previously tracked 
-        object. In other words, all tracked objects said no to this detection*/
-        if(m_tracking_objects.size() == counter)
-        {
-          m_tracking_objects[m_track_id++] = detection;
-        }
-      }
-    }
-
-    /*Show tracked codes if requested*/
-    if(m_show_map_markers) show_map_markers();
-
-    /*Publish tracked codes*/    
-    publish_tracked_codes();
-  }
-
   void QRTracking::publish_tracked_codes(void)
   {
     dronenav_msgs::TrackedCodes tracked;
-    for(auto& object : m_tracking_objects)
+    for(dronenav_msgs::Code& code : m_tracking_objects)
     {
-      tracked.codes.push_back(object.second);
+      tracked.codes.push_back(code);
     }
 
     m_tracked_codes_pub.publish(tracked);
@@ -388,44 +343,42 @@ namespace qr_tracking
     center.color.g = 0.65;
     center.color.b = 0.0;
 
-    for(auto& tracked : m_tracking_objects)
+    for(dronenav_msgs::Code& tracked : m_tracking_objects)
     {
-      dronenav_msgs::Code& detection = tracked.second;
-
       /*First few lines*/
       geometry_msgs::Point p1, p2;
-      for(int i = 0; i < detection.corners.size() - 1; i++)
+      for(int i = 0; i < tracked.corners.size() - 1; i++)
       {
-        p1.x = detection.corners[i].x;
-        p1.y = detection.corners[i].y;
-        p1.z = detection.corners[i].z;
+        p1.x = tracked.corners[i].x;
+        p1.y = tracked.corners[i].y;
+        p1.z = tracked.corners[i].z;
       
-        p2.x = detection.corners[i+1].x;
-        p2.y = detection.corners[i+1].y;
-        p2.z = detection.corners[i+1].z;
+        p2.x = tracked.corners[i+1].x;
+        p2.y = tracked.corners[i+1].y;
+        p2.z = tracked.corners[i+1].z;
 
         surface.points.push_back(p1);
         surface.points.push_back(p2);
       }
 
       /*Line that closes the rectangle*/
-      p1.x = detection.corners.front().x;
-      p1.y = detection.corners.front().y;
-      p1.z = detection.corners.front().z;
+      p1.x = tracked.corners.front().x;
+      p1.y = tracked.corners.front().y;
+      p1.z = tracked.corners.front().z;
     
-      p2.x = detection.corners.back().x;
-      p2.y = detection.corners.back().y;
-      p2.z = detection.corners.back().z;
+      p2.x = tracked.corners.back().x;
+      p2.y = tracked.corners.back().y;
+      p2.z = tracked.corners.back().z;
 
       surface.points.push_back(p1);
       surface.points.push_back(p2);
 
       /*Center point*/
-      center.points.push_back(detection.position);
+      center.points.push_back(tracked.position);
     }   
 
-    m_marker_pub.publish(surface);
-    m_marker_pub.publish(center);
+    if(!surface.points.empty()) m_marker_pub.publish(surface);
+    if(!center.points.empty()) m_marker_pub.publish(center);
   }
 }
 

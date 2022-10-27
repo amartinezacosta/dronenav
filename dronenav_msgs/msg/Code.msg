@@ -11,6 +11,10 @@ geometry_msgs/Vector3[] corners
 uint32[] u
 uint32[] v
 
+#Tracking data
+uint32 hit_streak
+uint32 time_since_update
+
 #QR code type and data
 string type
 string data

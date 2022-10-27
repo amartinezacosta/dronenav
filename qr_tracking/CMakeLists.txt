@@ -131,6 +131,8 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/qr_tracking.cpp
+  src/sort.cpp
+  src/Hungarian.cpp
 )
 
 ## Add cmake target dependencies of the library

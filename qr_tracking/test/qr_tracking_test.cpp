@@ -2,8 +2,6 @@
 
 TEST_F(DronenavTestFixture, qr_tracking_test)
 {
-  qr_tracking::QRTracking qr_tracker(nh, pvt_nh);
-
   dronenav_msgs::Takeoff takeoff_srv;
   takeoff_srv.request.x = 15.0;
   takeoff_srv.request.y = 14.0;
@@ -55,7 +53,6 @@ TEST_F(DronenavTestFixture, qr_tracking_test)
   }
   
   /*Land request*/
-    /*Land request*/
   dronenav_msgs::Land land_srv;
   land_srv.request.override_takeoff_pose = false;
   land_client.call(land_srv);
