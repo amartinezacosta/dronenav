@@ -82,10 +82,6 @@ namespace qr_tracking
     tf2_ros::TransformListener *m_tfListener;
     
     Sort m_sort;
-
-    //std::vector<dronenav_msgs::Code> m_prev_detections;
-    //int m_frame_count;
-    //int m_track_id;
     std::vector<dronenav_msgs::Code> m_tracking_objects;
 
     /*Parameters*/
@@ -93,7 +89,10 @@ namespace qr_tracking
     std::string m_pointcloud_topic;
     std::string m_frame_id;
     std::string m_base_frame_id;
+    double m_distance_threshold;
     int m_image_width;
+    int m_hits_min_threshold;
+    int m_missed_max_threshold;
     bool m_show_detections;
     bool m_show_detection_markers;
     bool m_show_map_markers;

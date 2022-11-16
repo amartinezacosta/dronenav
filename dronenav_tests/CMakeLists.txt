@@ -198,7 +198,16 @@ if(CATKIN_ENABLE_TESTING)
     test/simple_inspection_test.cpp
   )
 
+  add_rostest_gtest(full_inspection_test
+    test/full_inspection_test.test
+    test/full_inspection_test.cpp
+  )
+
   target_link_libraries(simple_inspection_test 
+    ${catkin_LIBRARIES}
+  )
+
+  target_link_libraries(full_inspection_test 
     ${catkin_LIBRARIES}
   )
 endif()

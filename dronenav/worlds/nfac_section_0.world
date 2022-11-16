@@ -60,6 +60,27 @@
             <uri>model://person_standing</uri>
         </include>
 
+        <!-- QR cube 1-->
+        <include>
+            <pose>0 -2 3 0 0 0</pose>
+            <name>qr_cube_1</name>
+            <uri>model://qr_cube</uri>
+        </include>
+
+        <!-- QR cube 2 -->
+        <!-- <include>
+            <pose>-1 -2 1.1 0 0 0</pose>
+            <name>qr_cube_2</name>
+            <uri>model://qr_cube</uri>
+        </include> -->
+
+        <!-- QR cube 3 -->
+        <!-- <include>
+            <pose>-1 -2 2.1 0 0 0</pose>
+            <name>qr_cube_3</name>
+            <uri>model://qr_cube</uri>
+        </include> -->
+
         <physics name='default_physics' default='0' type='ode'>
             <gravity>0 0 -9.8066</gravity>
             <ode>

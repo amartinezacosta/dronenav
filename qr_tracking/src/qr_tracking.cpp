@@ -15,6 +15,9 @@ namespace qr_tracking
     m_pvt_nh.param("show_detections", m_show_detections, true);
     m_pvt_nh.param("show_detection_markers", m_show_detection_markers, true);
     m_pvt_nh.param("show_map_markers", m_show_map_markers, true);
+    m_pvt_nh.param("hits_min_threshold", m_hits_min_threshold, 10);
+    m_pvt_nh.param("missed_max_threshold", m_missed_max_threshold, 10);
+    m_pvt_nh.param("detection_distance_threshold", m_distance_threshold, 0.1);
 
     /*Subscribers*/
     image_transport::ImageTransport it(m_nh);
@@ -24,15 +27,15 @@ namespace qr_tracking
     /*Publisher*/
     m_image_pub = it.advertise("dronenav/qr_tracker/image", 1);
     m_marker_pub = m_nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
-    m_tracked_codes_pub = m_nh.advertise<dronenav_msgs::TrackedCodes>("dronenav/qr_tracker/tracked", 10);
+    m_tracked_codes_pub = m_nh.advertise<dronenav_msgs::TrackedCodes>("dronenav/qr_tracker/tracked", 50);
 
     /*zbar configuration*/
     m_scanner.set_config(zbar::ZBAR_NONE, zbar::ZBAR_CFG_ENABLE, 1);
 
     /*Sort configure*/
-    m_sort.set_distance_threshold(0.1);
-    m_sort.set_hits_min_threshold(20);
-    m_sort.set_missed_max_threshold(20);
+    m_sort.set_distance_threshold(m_distance_threshold);
+    m_sort.set_hits_min_threshold(m_hits_min_threshold);
+    m_sort.set_missed_max_threshold(m_missed_max_threshold);
 
     /*TF2 listener*/
     m_tfListener = new tf2_ros::TransformListener(m_tfBuffer, m_nh);
@@ -161,6 +164,24 @@ namespace qr_tracking
       detection.position.x /= detection.corners.size();
       detection.position.y /= detection.corners.size();
       detection.position.z /= detection.corners.size();
+
+      /*Compute normal*/
+      tf2::Vector3 normal;
+      tf2::Vector3 p(
+        detection.corners[1].x - detection.corners[0].x,
+        detection.corners[1].y - detection.corners[0].y,
+        detection.corners[1].z - detection.corners[0].z);
+      tf2::Vector3 q(
+        detection.corners[3].x - detection.corners[0].x,
+        detection.corners[3].y - detection.corners[0].y,
+        detection.corners[3].z - detection.corners[0].z);
+
+      normal = p.cross(q);
+      normal.normalize();
+
+      detection.normal.x = normal.x();
+      detection.normal.y = normal.y();
+      detection.normal.z = normal.z(); 
     }
 
     /*Visualize in rviz*/
@@ -267,6 +288,25 @@ namespace qr_tracking
     center.color.r = 1.0;
     center.color.g = 0.0;
     center.color.b = 0.0;
+
+    /*Surface normal*/
+    visualization_msgs::Marker normal;
+    normal.header.frame_id = "map";
+    normal.header.stamp = ros::Time();
+    normal.ns = "qr_tracking";
+    normal.id = 2;
+    normal.lifetime = ros::Duration(0.5);
+    normal.type = visualization_msgs::Marker::LINE_LIST;
+    normal.action = visualization_msgs::Marker::ADD;   
+
+    normal.pose.orientation.w = 1.0;
+    normal.scale.x = 0.1;
+    normal.scale.y = 0.1;
+    normal.scale.z = 0.1;
+    normal.color.a = 1.0;
+    normal.color.r = 1.0;
+    normal.color.g = 0.0;
+    normal.color.b = 0.0;
     
     for(dronenav_msgs::Code& detection : detections)
     {
@@ -300,8 +340,21 @@ namespace qr_tracking
 
       /*Center point*/
       center.points.push_back(detection.position);
+
+      /*Surface normal*/
+      p1.x = detection.position.x;
+      p1.y = detection.position.y;
+      p1.z = detection.position.z;
+
+      p2.x = detection.position.x + 1.0*detection.normal.x;
+      p2.y = detection.position.y + 1.0*detection.normal.y;
+      p2.z = detection.position.z + 1.0*detection.normal.z;
+
+      normal.points.push_back(p1);
+      normal.points.push_back(p2);
     }    
 
+    m_marker_pub.publish(normal);
     m_marker_pub.publish(surface);
     m_marker_pub.publish(center);
   }
@@ -312,7 +365,7 @@ namespace qr_tracking
     surface.header.frame_id = "map";
     surface.header.stamp = ros::Time();
     surface.ns = "qr_tracking";
-    surface.id = 2;
+    surface.id = 3;
     surface.type = visualization_msgs::Marker::LINE_LIST;
     surface.action = visualization_msgs::Marker::ADD;   
 
@@ -330,7 +383,7 @@ namespace qr_tracking
     center.header.frame_id = "map";
     center.header.stamp = ros::Time();
     center.ns = "qr_tracking";
-    center.id = 3;
+    center.id = 4;
     center.type = visualization_msgs::Marker::SPHERE_LIST;
     center.action = visualization_msgs::Marker::ADD;   
 
@@ -342,6 +395,24 @@ namespace qr_tracking
     center.color.r = 1.0;
     center.color.g = 0.65;
     center.color.b = 0.0;
+
+    /*Surface normal*/
+    visualization_msgs::Marker normal;
+    normal.header.frame_id = "map";
+    normal.header.stamp = ros::Time();
+    normal.ns = "qr_tracking";
+    normal.id = 5;
+    normal.type = visualization_msgs::Marker::LINE_LIST;
+    normal.action = visualization_msgs::Marker::ADD;   
+
+    normal.pose.orientation.w = 1.0;
+    normal.scale.x = 0.1;
+    normal.scale.y = 0.1;
+    normal.scale.z = 0.1;
+    normal.color.a = 1.0;
+    normal.color.r = 1.0;
+    normal.color.g = 0.65;
+    normal.color.b = 0.0;
 
     for(dronenav_msgs::Code& tracked : m_tracking_objects)
     {
@@ -375,8 +446,21 @@ namespace qr_tracking
 
       /*Center point*/
       center.points.push_back(tracked.position);
+
+      /*Surface normal*/
+      p1.x = tracked.position.x;
+      p1.y = tracked.position.y;
+      p1.z = tracked.position.z;
+
+      p2.x = tracked.position.x + 1.0*tracked.normal.x;
+      p2.y = tracked.position.y + 1.0*tracked.normal.y;
+      p2.z = tracked.position.z + 1.0*tracked.normal.z;
+
+      normal.points.push_back(p1);
+      normal.points.push_back(p2);
     }   
 
+    if(!normal.points.empty()) m_marker_pub.publish(normal);
     if(!surface.points.empty()) m_marker_pub.publish(surface);
     if(!center.points.empty()) m_marker_pub.publish(center);
   }

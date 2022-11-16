@@ -1,7 +1,10 @@
 #include "dronenav_test_fixture.hpp"
 
 TEST_F(DronenavTestFixture, simple_inspection_test)
-{  
+{ 
+  ros::Duration(20.0).sleep();
+
+  /*Step 0. Takeoff*/
   dronenav_msgs::Takeoff takeoff_srv;
   takeoff_srv.request.x = 0.0;
   takeoff_srv.request.y = 0.0;
@@ -15,7 +18,7 @@ TEST_F(DronenavTestFixture, simple_inspection_test)
   EXPECT_STREQ(dronenav_status.state.c_str(),
     dronenav_msgs::Status::HOVERING_STATE.c_str());
 
-  /*Call waypoint generation*/
+  /*Step 1. Generate initial inspection plan*/
   dronenav_msgs::GenerateWaypoints generate_srv;
   generate_srv.request.viewport = viewport;
   generate_srv.request.min = min;
@@ -25,21 +28,27 @@ TEST_F(DronenavTestFixture, simple_inspection_test)
   waypoint_generation_client.call(generate_srv);
   EXPECT_GT(generate_srv.response.waypoints.size(), 0);
 
-  /*Publish generated inspection waypoints to the drone
-  and initialize mission*/
-  waypoints = generate_srv.response.waypoints;
-  for(dronenav_msgs::Waypoint waypoint : waypoints)
+  /*Step 2. Publish generate waypoints to the planner*/
+  for(dronenav_msgs::Waypoint& wpt : generate_srv.response.waypoints)
   {
-    waypoint_pub.publish(waypoint);
-  }
+    dronenav_msgs::GlobalGoal goal;
+    goal.x = wpt.position.x;
+    goal.y = wpt.position.y;
+    goal.z = wpt.position.z;
+    goal.yaw = wpt.yaw;
+    /*Lowest priority assigned to original plan*/
+    goal.priority = 0;
+
+    path_goal_pub.publish(goal);
+  } 
 
   /*Wait for queue to fill*/
-  ros::Duration(5.0).sleep();
+  ros::Duration(20.0).sleep();
 
-  /*Wait here for inspection to finish*/
-  wait_for_waypoint_queue(900);
+  /*Step 3. Wait for planner to finish the inspection*/
+  wait_for_planner_queue(900);
 
-  /*Request landing*/
+  /*Step 3. Request landing and finish inspection*/
   dronenav_msgs::Land land_srv;
   land_srv.request.override_takeoff_pose = false;
   land_client.call(land_srv);
@@ -49,6 +58,8 @@ TEST_F(DronenavTestFixture, simple_inspection_test)
   wait_for_state(dronenav_msgs::Status::LANDED_TOUCHDOWN_STATE, 10.0);
   EXPECT_STREQ(dronenav_status.state.c_str(), 
     dronenav_msgs::Status::LANDED_TOUCHDOWN_STATE.c_str());
+
+  ros::Duration(10.0).sleep();
 }
 
 int main(int argc, char** argv)
